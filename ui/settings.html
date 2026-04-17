@@ -1,0 +1,40 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <title>udict settings</title>
+  <link rel="stylesheet" href="/app.css"/>
+</head>
+<body class="settings">
+  <div class="settings-bar">
+    <a href="/" class="back">← Back</a>
+    <h2>Settings</h2>
+  </div>
+  <div class="settings-body">
+    <section>
+      <div class="sec-head">
+        <h3>Dictionaries</h3>
+        <button id="btn-pick">Pick directory...</button>
+      </div>
+      <ul id="dict-list" class="dict-list"></ul>
+    </section>
+
+    <section id="scan-section" style="display:none">
+      <div class="sec-head">
+        <h3>Files in <code id="scan-dir"></code></h3>
+      </div>
+      <p class="hint">Click any .mdx file to add it.</p>
+      <ul id="scan-list" class="scan-list"></ul>
+    </section>
+
+    <section>
+      <div class="sec-head">
+        <h3>Cache</h3>
+        <button id="btn-clear-cache" class="danger">Clear cache</button>
+      </div>
+      <div id="cache-info" class="cache-info">Loading...</div>
+    </section>
+  </div>
+  <script src="/settings.js"></script>
+</body>
+</html>

@@ -1,0 +1,20 @@
+{
+  "pluginName": "udict",
+  "description": "Offline MDX/MDD dictionary lookup",
+  "author": "udict",
+  "version": "0.2.0",
+  "logo": "logo.png",
+  "main": "index.html",
+  "preload": "preload.js",
+  "features": [
+    {
+      "code": "udict",
+      "explain": "Look up a word in local MDX dictionaries",
+      "mainPush": true,
+      "cmds": [
+        { "type": "over", "label": "udict" },
+        "udict"
+      ]
+    }
+  ]
+}

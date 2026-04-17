@@ -1,0 +1,38 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <title>udict</title>
+  <style>
+    html, body { margin:0; padding:0; height:100%; }
+    iframe { width:100%; height:100%; border:0; display:block; }
+  </style>
+</head>
+<body>
+  <iframe id="app"></iframe>
+  <script>
+    const base = (window.udict && window.udict.base) || 'http://127.0.0.1:7219';
+    const app = document.getElementById('app');
+    app.src = base + '/';
+
+    function sendToFrame(msg) {
+      try { app.contentWindow && app.contentWindow.postMessage(msg, '*'); } catch (e) {}
+    }
+
+    if (window.udict && window.udict.onEnter) {
+      window.udict.onEnter(payload => {
+        const send = () => sendToFrame({ type: 'udict-query', word: payload });
+        if (app.contentDocument && app.contentDocument.readyState === 'complete') send();
+        else app.addEventListener('load', send, { once: true });
+      });
+    }
+
+    // Bridge: settings page asks parent to pick a directory via utools dialog
+    window.addEventListener('message', e => {
+      if (!e.data || e.data.type !== 'udict-pick-dir') return;
+      const picked = window.udict && window.udict.pickDirectory && window.udict.pickDirectory();
+      if (picked) sendToFrame({ type: 'udict-dir-picked', path: picked });
+    });
+  </script>
+</body>
+</html>

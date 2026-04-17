@@ -1,0 +1,57 @@
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; height: 100%; font-family: -apple-system, "Segoe UI", system-ui, sans-serif; }
+body { display: flex; flex-direction: column; }
+
+#bar { position: relative; padding: 10px; border-bottom: 1px solid #ddd; background: #fafafa; display: flex; gap: 8px; align-items: center; }
+#q { flex: 1; padding: 8px 12px; font-size: 16px; border: 1px solid #ccc; border-radius: 6px; outline: none; }
+#settings-link { text-decoration: none; color: #666; font-size: 20px; padding: 4px 8px; border-radius: 4px; }
+#settings-link:hover { background: #eee; }
+#q:focus { border-color: #4a90e2; }
+
+#suggest { position: absolute; left: 10px; right: 10px; top: 48px; margin: 0; padding: 0;
+  list-style: none; background: #fff; border: 1px solid #ddd; border-radius: 6px;
+  max-height: 300px; overflow: auto; z-index: 10; display: none; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+#suggest.show { display: block; }
+#suggest li { padding: 6px 12px; cursor: pointer; }
+#suggest li.active, #suggest li:hover { background: #eef4ff; }
+
+#results { flex: 1; overflow: hidden; display: flex; flex-direction: column; }
+.entry-frame { flex: 1; width: 100%; border: 0; }
+.entry-meta { padding: 4px 12px; font-size: 12px; color: #666; background: #f5f5f5; border-bottom: 1px solid #eee; }
+.empty { padding: 20px; color: #999; }
+
+.settings-bar { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-bottom: 1px solid #ddd; background: #fafafa; }
+.settings-bar h2 { margin: 0; font-size: 16px; font-weight: 600; }
+.settings-bar .back { color: #4a90e2; text-decoration: none; font-size: 14px; }
+.settings-bar .back:hover { text-decoration: underline; }
+.settings-body { padding: 14px; overflow: auto; height: calc(100% - 45px); }
+.settings-body section { margin-bottom: 20px; }
+.sec-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.sec-head h3 { margin: 0; font-size: 14px; font-weight: 600; }
+.sec-head code { font-size: 12px; color: #666; font-weight: normal; }
+.hint { font-size: 12px; color: #888; margin: 4px 0 8px; }
+
+button { padding: 5px 12px; border: 1px solid #ccc; background: #fff; border-radius: 4px; cursor: pointer; font-size: 13px; }
+button:hover { background: #f0f0f0; }
+button.danger { color: #c33; border-color: #dbb; }
+button.danger:hover { background: #fff0f0; }
+
+.dict-list, .scan-list { list-style: none; margin: 0; padding: 0; border: 1px solid #e5e5e5; border-radius: 6px; }
+.dict-list li { padding: 10px 12px; border-bottom: 1px solid #eee; }
+.dict-list li:last-child { border-bottom: 0; }
+.dict-list .row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.dict-list .info { flex: 1; min-width: 0; }
+.dict-list .name { font-weight: 600; font-size: 14px; }
+.dict-list .path { font-size: 12px; color: #666; font-family: Consolas, monospace; word-break: break-all; }
+.dict-list .meta { font-size: 11px; color: #999; margin-top: 2px; }
+
+.scan-list { max-height: 300px; overflow: auto; }
+.scan-list li { padding: 6px 12px; border-bottom: 1px solid #f0f0f0; display: flex; justify-content: space-between; color: #999; font-size: 13px; }
+.scan-list li.mdx { color: #222; cursor: pointer; font-weight: 600; }
+.scan-list li.mdx:hover { background: #eef4ff; }
+.scan-list .sz { color: #888; font-size: 11px; }
+
+.cache-info { font-size: 13px; line-height: 1.6; padding: 8px 12px; background: #f9f9f9; border-radius: 6px; }
+.cache-info code { font-size: 12px; }
+
+body.settings { display: block; }
