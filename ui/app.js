@@ -69,25 +69,52 @@
       results.innerHTML = '<div class="empty">No results for "' + escapeHtml(word) + '"</div>';
       return;
     }
-    // Render first result in iframe for style isolation
-    const first = data.results[0];
     results.innerHTML = '';
     const meta = document.createElement('div');
     meta.className = 'entry-meta';
-    meta.textContent = `[${first.dict}] ${first.keyText}` + (data.results.length > 1 ? `  (+${data.results.length - 1} more)` : '');
+    const dictNames = [...new Set(data.results.map(r => r.dict))];
+    meta.textContent = `${data.results.length} entries from ${dictNames.length} dict(s): ${dictNames.join(', ')}`;
     results.appendChild(meta);
     const iframe = document.createElement('iframe');
     iframe.className = 'entry-frame';
     iframe.sandbox = 'allow-scripts allow-same-origin allow-popups';
     results.appendChild(iframe);
-    iframe.srcdoc = wrapHtml(first.html);
 
-    iframe.addEventListener('load', () => hookEntryClicks(iframe));
+    const parts = data.results.map(r =>
+      `<section class="udict-entry" data-dict="${escapeHtml(r.dict)}">
+         <header class="udict-entry-head">【${escapeHtml(r.dict)}】${escapeHtml(r.keyText)}</header>
+         <div class="udict-entry-body">${stripDarkMedia(r.html)}</div>
+       </section>`
+    ).join('<hr class="udict-sep"/>');
+    iframe.srcdoc = wrapHtml(parts);
+  }
+
+  function stripDarkMedia(css) {
+    let out = '', i = 0;
+    while (i < css.length) {
+      const m = css.slice(i).match(/@media[^{]*prefers-color-scheme\s*:\s*dark[^{]*\{/i);
+      if (!m) { out += css.slice(i); break; }
+      out += css.slice(i, i + m.index);
+      let depth = 1, j = i + m.index + m[0].length;
+      while (j < css.length && depth > 0) {
+        const c = css[j++];
+        if (c === '{') depth++;
+        else if (c === '}') depth--;
+      }
+      i = j;
+    }
+    return out;
   }
 
   function wrapHtml(bodyHtml) {
-    return `<!doctype html><html><head><meta charset="utf-8"/><base href="/"/>
-<style>body{margin:0;padding:10px;font-family:-apple-system,"Segoe UI",system-ui,sans-serif;}</style>
+    return `<!doctype html><html><head><meta charset="utf-8"/><meta name="color-scheme" content="light"/><base href="/"/>
+<style>
+  :root{color-scheme:light!important;}
+  html,body{background:#fff!important;color:#222!important;}
+  body{margin:0;padding:10px;font-family:-apple-system,"Segoe UI",system-ui,sans-serif;}
+  .udict-entry-head{font:600 13px -apple-system,"Segoe UI",sans-serif;color:#4a90e2;padding:6px 0;border-bottom:1px solid #eee;margin-bottom:8px;}
+  .udict-sep{border:0;border-top:2px dashed #ccd;margin:18px 0;}
+</style>
 </head><body>${bodyHtml}
 <script>
 document.addEventListener('click', function(e){

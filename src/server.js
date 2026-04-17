@@ -19,6 +19,24 @@ function mimeOf(p) {
   return MIME[path.extname(p).toLowerCase()] || 'application/octet-stream';
 }
 
+function stripDarkMedia(css) {
+  let out = '', i = 0;
+  while (i < css.length) {
+    const rest = css.slice(i);
+    const m = rest.match(/@media[^{]*prefers-color-scheme\s*:\s*dark[^{]*\{/i);
+    if (!m) { out += rest; break; }
+    out += rest.slice(0, m.index);
+    let depth = 1, j = m.index + m[0].length;
+    while (j < rest.length && depth > 0) {
+      const c = rest[j++];
+      if (c === '{') depth++;
+      else if (c === '}') depth--;
+    }
+    i += j;
+  }
+  return out;
+}
+
 function readBody(req) {
   return new Promise((resolve, reject) => {
     let buf = '';
@@ -121,8 +139,13 @@ function createApp(configPath, uiDir) {
         const key = decodeURIComponent(rest.slice(slash + 1));
         const buf = await mgr.getResource(dictName, key);
         if (!buf) return notFound(res);
-        res.writeHead(200, { 'Content-Type': mimeOf(key), 'Cache-Control': 'public, max-age=3600' });
-        return res.end(buf);
+        const mime = mimeOf(key);
+        let out = buf;
+        if (mime === 'text/css') {
+          out = Buffer.from(stripDarkMedia(buf.toString('utf8')), 'utf8');
+        }
+        res.writeHead(200, { 'Content-Type': mime, 'Cache-Control': 'public, max-age=3600' });
+        return res.end(out);
       }
 
       notFound(res);
