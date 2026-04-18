@@ -42,13 +42,21 @@ window.udict = {
     }
   },
   openExternal(url) {
-    try {
-      if (window.utools && window.utools.shellOpenExternal) return window.utools.shellOpenExternal(url);
-      if (window.require) {
-        const { shell } = window.require('electron');
-        if (shell && shell.openExternal) return shell.openExternal(url);
-      }
-    } catch {}
+    console.log('[udict] openExternal:', url);
+    const tries = [
+      () => window.utools && window.utools.shellOpenExternal && (window.utools.shellOpenExternal(url), 'utools.shellOpenExternal'),
+      () => window.utools && window.utools.shell && window.utools.shell.openExternal && (window.utools.shell.openExternal(url), 'utools.shell.openExternal'),
+      () => {
+        const { shell } = require('electron');
+        if (shell && shell.openExternal) { shell.openExternal(url); return 'electron.shell.openExternal'; }
+      },
+      () => { window.open(url, '_blank'); return 'window.open'; }
+    ];
+    for (const fn of tries) {
+      try { const r = fn(); if (r) { console.log('[udict] opened via', r); return; } }
+      catch (e) { console.warn('[udict] openExternal try failed:', e.message); }
+    }
+    console.error('[udict] all openExternal strategies failed');
   },
   pickDirectory() {
     if (!window.utools || !window.utools.showOpenDialog) return null;
