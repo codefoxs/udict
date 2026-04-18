@@ -34,7 +34,10 @@ window.udict = {
   onEnter(cb) {
     if (window.utools && window.utools.onPluginEnter) {
       window.utools.onPluginEnter(({ payload }) => {
-        cb(typeof payload === 'string' ? payload : '');
+        let word = '';
+        if (typeof payload === 'string') word = payload;
+        else if (payload && typeof payload === 'object') word = payload.text || payload.description || '';
+        cb(word);
       });
     }
   },
@@ -60,7 +63,9 @@ if (window.utools && window.utools.onMainPush) {
       return words.map(w => ({ icon: 'logo.png', text: w, title: 'udict', description: w }));
     },
     ({ code, type, payload, option }) => {
-      return { text: (option && option.text) || payload || '' };
+      // Returning undefined lets uTools enter the plugin with `option` as payload;
+      // onPluginEnter above unwraps option.text.
+      return;
     }
   );
 }
