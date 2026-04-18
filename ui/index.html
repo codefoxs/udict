@@ -9,7 +9,12 @@
 <body>
   <aside id="sidebar">
     <div class="side-head">
-      <span>udict</span>
+      <span class="brand">
+        <svg class="brand-logo" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <path d="M12 2 L13.2 8.5 L19.5 6 L15 11.3 L22 12 L15 12.7 L19.5 18 L13.2 15.5 L12 22 L10.8 15.5 L4.5 18 L9 12.7 L2 12 L9 11.3 L4.5 6 L10.8 8.5 Z"/>
+        </svg>
+        <span class="brand-name">udict</span>
+      </span>
       <button id="side-toggle" title="折叠/展开侧栏">◀</button>
     </div>
     <div class="side-body">
@@ -38,7 +43,12 @@
   <main id="main">
     <div id="bar">
       <input id="q" type="text" placeholder="Type a word..." autocomplete="off" autofocus/>
-      <a id="settings-link" href="/settings" title="Settings">⚙</a>
+      <a id="settings-link" href="/settings" title="设置">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
+      </a>
       <ul id="suggest"></ul>
     </div>
     <div id="results"></div>

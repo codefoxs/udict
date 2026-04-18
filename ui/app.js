@@ -175,12 +175,12 @@
     return `<!doctype html><html><head><meta charset="utf-8"/><meta name="color-scheme" content="light"/><base href="/"/>
 <style>
   :root{color-scheme:light!important;}
-  html,body{background:#fff!important;color:#222!important;}
+  html,body{background:#fff!important;color:#1F1E1D!important;}
   html{font-size:${scale}%;overflow-x:hidden;}
-  body{margin:0;padding:10px;font-family:-apple-system,"Segoe UI",system-ui,sans-serif;overflow-x:hidden;word-wrap:break-word;}
+  body{margin:0;padding:14px 18px;font-family:"Segoe UI",-apple-system,system-ui,"PingFang SC","Microsoft YaHei",sans-serif;overflow-x:hidden;word-wrap:break-word;}
   img,video,table{max-width:100%!important;height:auto;}
-  .udict-entry-head{font:600 13px -apple-system,"Segoe UI",sans-serif;color:#4a90e2;padding:6px 0;border-bottom:1px solid #eee;margin-bottom:8px;}
-  .udict-sep{border:0;border-top:2px dashed #ccd;margin:18px 0;}
+  .udict-entry-head{font:600 12px "Segoe UI",system-ui,sans-serif;color:#D97757;padding:6px 0;border-bottom:1px solid #E8E6DC;margin-bottom:10px;letter-spacing:0.3px;}
+  .udict-sep{border:0;border-top:1px dashed #D9D6CB;margin:20px 0;}
 </style>
 </head><body>${bodyHtml}
 <script>
