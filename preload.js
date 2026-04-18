@@ -34,9 +34,12 @@ window.udict = {
   onEnter(cb) {
     if (window.utools && window.utools.onPluginEnter) {
       window.utools.onPluginEnter(({ payload }) => {
-        let word = '';
-        if (typeof payload === 'string') word = payload;
-        else if (payload && typeof payload === 'object') word = payload.text || payload.description || '';
+        let word = window._udictPending || '';
+        window._udictPending = '';
+        if (!word) {
+          if (typeof payload === 'string') word = payload;
+          else if (payload && typeof payload === 'object') word = payload.text || payload.description || '';
+        }
         cb(word);
       });
     }
@@ -62,9 +65,11 @@ if (window.utools && window.utools.onMainPush) {
       if (!words.length) return [{ icon: 'logo.png', text: q, title: 'udict', description: 'Look up "' + q + '"' }];
       return words.map(w => ({ icon: 'logo.png', text: w, title: 'udict', description: w }));
     },
-    ({ code, type, payload, option }) => {
-      // Return a descriptor to enter the plugin with the chosen word as payload.
-      return { code, type, payload: (option && option.text) || payload || '' };
+    (action, option) => {
+      const opt = option || (action && action.option) || {};
+      const word = opt.text || opt.description || (action && action.payload) || '';
+      window._udictPending = String(word);
+      // Returning nothing lets uTools enter the plugin; onPluginEnter reads _udictPending.
     }
   );
 }
