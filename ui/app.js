@@ -198,11 +198,6 @@ document.addEventListener('click', function(e){
       parent.postMessage({type:'udict-entry', word:t.dataset.udictEntry}, '*');
       return;
     }
-    if (t.tagName === 'A' && t.href && /^https?:/i.test(t.href)) {
-      e.preventDefault();
-      parent.postMessage({type:'udict-open-external', url:t.href}, '*');
-      return;
-    }
     t = t.parentNode;
   }
 }, true);
@@ -261,13 +256,11 @@ window.addEventListener('message', function(e){
           <li>可折叠侧栏：词典跳转、字号调节、历史记录</li>
           <li>强制浅色渲染，剥离 <code style="background:#F5F4EF;padding:1px 6px;border-radius:3px;font-size:13px;">prefers-color-scheme: dark</code></li>
         </ul>
-        <h3 style="font-size:13px;text-transform:uppercase;letter-spacing:0.8px;color:#8E8C85;margin:24px 0 10px;font-weight:600;">链接</h3>
-        <p style="margin:0;font-size:14px;">
-          <a href="https://github.com/codefoxs/udict" target="_blank"
-             style="color:#D97757;text-decoration:none;border-bottom:1px solid #F5DCD0;">
-            github.com/codefoxs/udict
-          </a>
+        <h3 style="font-size:13px;text-transform:uppercase;letter-spacing:0.8px;color:#8E8C85;margin:24px 0 10px;font-weight:600;">项目地址</h3>
+        <p style="margin:0;font-size:14px;font-family:Consolas,'SF Mono',monospace;background:#F5F4EF;padding:10px 14px;border-radius:6px;user-select:all;color:#D97757;">
+          https://github.com/codefoxs/udict
         </p>
+        <p style="margin:6px 0 0;font-size:11px;color:#8E8C85;">（点击地址选中后复制到浏览器打开）</p>
         <p style="margin:28px 0 0;font-size:12px;color:#8E8C85;">
           由 Claude Code 协同编写 · 以 Claude 奶油/珊瑚配色呈现
         </p>
