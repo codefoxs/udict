@@ -1,6 +1,29 @@
 * { box-sizing: border-box; }
-html, body { margin: 0; padding: 0; height: 100%; font-family: -apple-system, "Segoe UI", system-ui, sans-serif; }
-body { display: flex; flex-direction: column; }
+html, body { margin: 0; padding: 0; height: 100%; font-family: -apple-system, "Segoe UI", system-ui, sans-serif; background: #fff; color: #222; color-scheme: light; }
+body { display: flex; flex-direction: row; }
+
+#sidebar { width: 200px; flex-shrink: 0; border-right: 1px solid #e5e5e5; background: #fafbfc; display: flex; flex-direction: column; transition: width 0.2s; }
+body.side-collapsed #sidebar { width: 32px; }
+body.side-collapsed #sidebar .side-body { display: none; }
+body.side-collapsed #side-toggle { transform: rotate(180deg); }
+.side-head { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; border-bottom: 1px solid #e5e5e5; font-weight: 600; font-size: 14px; }
+#side-toggle { background: none; border: 0; font-size: 12px; cursor: pointer; color: #666; padding: 2px 6px; }
+#side-toggle:hover { color: #222; }
+.side-body { flex: 1; overflow: auto; padding: 8px 10px; }
+.side-section { margin-bottom: 16px; }
+.side-title { font-size: 11px; text-transform: uppercase; color: #888; margin-bottom: 6px; letter-spacing: 0.5px; }
+.font-ctrl { display: flex; align-items: center; gap: 4px; }
+.font-ctrl button { padding: 4px 8px; font-size: 12px; }
+.font-ctrl #font-val { flex: 1; text-align: center; font-size: 12px; color: #555; }
+.dict-jump { list-style: none; margin: 0; padding: 0; }
+.dict-jump li { padding: 6px 8px; border-radius: 4px; cursor: pointer; font-size: 13px; margin-bottom: 2px; }
+.dict-jump li:hover { background: #eef4ff; }
+.dict-jump li.muted { color: #999; cursor: default; font-style: italic; }
+.dict-jump li.muted:hover { background: none; }
+.dict-jump .dj-name { font-weight: 600; color: #4a90e2; display: block; }
+.dict-jump .dj-key { color: #666; font-size: 11px; }
+
+#main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 
 #bar { position: relative; padding: 10px; border-bottom: 1px solid #ddd; background: #fafafa; display: flex; gap: 8px; align-items: center; }
 #q { flex: 1; padding: 8px 12px; font-size: 16px; border: 1px solid #ccc; border-radius: 6px; outline: none; }

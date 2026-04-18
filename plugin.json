@@ -12,8 +12,9 @@
       "explain": "Look up a word in local MDX dictionaries",
       "mainPush": true,
       "cmds": [
-        { "type": "over", "label": "udict" },
-        "udict"
+        "udict",
+        { "type": "over", "label": "udict 查词" },
+        { "type": "regex", "label": "udict 查词", "match": "/^[a-zA-Z][a-zA-Z'\\- ]{0,50}$/", "minLength": 1, "maxLength": 50 }
       ]
     }
   ]

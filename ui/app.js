@@ -2,10 +2,35 @@
   const qInput = document.getElementById('q');
   const sugList = document.getElementById('suggest');
   const results = document.getElementById('results');
+  const dictJump = document.getElementById('dict-jump');
+  const fontVal = document.getElementById('font-val');
+  const sideToggle = document.getElementById('side-toggle');
 
   let sugTimer = 0;
   let activeIdx = -1;
   let currentSug = [];
+  let currentIframe = null;
+  let fontScale = Number(localStorage.getItem('udict.fontScale')) || 100;
+
+  // Sidebar toggle
+  if (localStorage.getItem('udict.sideCollapsed') === '1') document.body.classList.add('side-collapsed');
+  sideToggle.addEventListener('click', () => {
+    document.body.classList.toggle('side-collapsed');
+    localStorage.setItem('udict.sideCollapsed', document.body.classList.contains('side-collapsed') ? '1' : '0');
+  });
+
+  // Font scale
+  function applyFont() {
+    fontVal.textContent = fontScale + '%';
+    localStorage.setItem('udict.fontScale', String(fontScale));
+    if (currentIframe && currentIframe.contentWindow) {
+      currentIframe.contentWindow.postMessage({ type: 'udict-font-scale', scale: fontScale }, '*');
+    }
+  }
+  document.getElementById('font-inc').addEventListener('click', () => { fontScale = Math.min(250, fontScale + 10); applyFont(); });
+  document.getElementById('font-dec').addEventListener('click', () => { fontScale = Math.max(60, fontScale - 10); applyFont(); });
+  document.getElementById('font-reset').addEventListener('click', () => { fontScale = 100; applyFont(); });
+  fontVal.textContent = fontScale + '%';
 
   qInput.addEventListener('input', () => {
     clearTimeout(sugTimer);
@@ -79,14 +104,29 @@
     iframe.className = 'entry-frame';
     iframe.sandbox = 'allow-scripts allow-same-origin allow-popups';
     results.appendChild(iframe);
+    currentIframe = iframe;
 
-    const parts = data.results.map(r =>
-      `<section class="udict-entry" data-dict="${escapeHtml(r.dict)}">
+    const parts = data.results.map((r, i) =>
+      `<section class="udict-entry" id="udict-sec-${i}" data-dict="${escapeHtml(r.dict)}">
          <header class="udict-entry-head">【${escapeHtml(r.dict)}】${escapeHtml(r.keyText)}</header>
          <div class="udict-entry-body">${stripDarkMedia(r.html)}</div>
        </section>`
     ).join('<hr class="udict-sep"/>');
-    iframe.srcdoc = wrapHtml(parts);
+    iframe.srcdoc = wrapHtml(parts, fontScale);
+
+    // Populate dict-jump sidebar
+    dictJump.innerHTML = data.results.map((r, i) =>
+      `<li data-sec="udict-sec-${i}">
+         <span class="dj-name">${escapeHtml(r.dict)}</span>
+         <span class="dj-key">${escapeHtml(r.keyText)}</span>
+       </li>`
+    ).join('');
+    dictJump.querySelectorAll('li').forEach(li => {
+      li.addEventListener('click', () => {
+        if (!currentIframe || !currentIframe.contentWindow) return;
+        currentIframe.contentWindow.postMessage({ type: 'udict-scroll-to', id: li.dataset.sec }, '*');
+      });
+    });
   }
 
   function stripDarkMedia(css) {
@@ -106,11 +146,12 @@
     return out;
   }
 
-  function wrapHtml(bodyHtml) {
+  function wrapHtml(bodyHtml, scale) {
     return `<!doctype html><html><head><meta charset="utf-8"/><meta name="color-scheme" content="light"/><base href="/"/>
 <style>
   :root{color-scheme:light!important;}
   html,body{background:#fff!important;color:#222!important;}
+  html{font-size:${scale}%;}
   body{margin:0;padding:10px;font-family:-apple-system,"Segoe UI",system-ui,sans-serif;}
   .udict-entry-head{font:600 13px -apple-system,"Segoe UI",sans-serif;color:#4a90e2;padding:6px 0;border-bottom:1px solid #eee;margin-bottom:8px;}
   .udict-sep{border:0;border-top:2px dashed #ccd;margin:18px 0;}
@@ -133,6 +174,15 @@ document.addEventListener('click', function(e){
     t = t.parentNode;
   }
 }, true);
+window.addEventListener('message', function(e){
+  if (!e.data) return;
+  if (e.data.type === 'udict-font-scale') {
+    document.documentElement.style.fontSize = e.data.scale + '%';
+  } else if (e.data.type === 'udict-scroll-to') {
+    var el = document.getElementById(e.data.id);
+    if (el) el.scrollIntoView({behavior:'smooth', block:'start'});
+  }
+});
 <\/script></body></html>`;
   }
 

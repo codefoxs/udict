@@ -113,7 +113,18 @@
     });
     if (!mdxs.length) {
       scanList.insertAdjacentHTML('afterbegin', '<li class="empty">No .mdx files in this directory.</li>');
+      return;
     }
+    // Auto-add any mdx files not already configured
+    let added = 0;
+    for (const m of mdxs) {
+      if (!currentDicts.find(d => d.mdx === m.path)) {
+        const name = m.name.replace(/\.mdx$/i, '');
+        currentDicts.push({ name, mdx: m.path });
+        added++;
+      }
+    }
+    if (added) await saveDicts();
   }
 
   async function loadCache() {
