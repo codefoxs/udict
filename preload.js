@@ -63,9 +63,8 @@ if (window.utools && window.utools.onMainPush) {
       return words.map(w => ({ icon: 'logo.png', text: w, title: 'udict', description: w }));
     },
     ({ code, type, payload, option }) => {
-      // Returning undefined lets uTools enter the plugin with `option` as payload;
-      // onPluginEnter above unwraps option.text.
-      return;
+      // Return a descriptor to enter the plugin with the chosen word as payload.
+      return { code, type, payload: (option && option.text) || payload || '' };
     }
   );
 }
