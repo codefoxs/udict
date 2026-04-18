@@ -19,19 +19,35 @@
       try { app.contentWindow && app.contentWindow.postMessage(msg, '*'); } catch (e) {}
     }
 
+    let pending = null;
+    let frameReady = false;
+
+    function flushPending() {
+      if (pending && frameReady) {
+        sendToFrame({ type: 'udict-query', word: pending });
+        pending = null;
+      }
+    }
+
     if (window.udict && window.udict.onEnter) {
       window.udict.onEnter(payload => {
-        const send = () => sendToFrame({ type: 'udict-query', word: payload });
-        if (app.contentDocument && app.contentDocument.readyState === 'complete') send();
-        else app.addEventListener('load', send, { once: true });
+        if (!payload) return;
+        pending = payload;
+        flushPending();
       });
     }
 
-    // Bridge: settings page asks parent to pick a directory via utools dialog
     window.addEventListener('message', e => {
-      if (!e.data || e.data.type !== 'udict-pick-dir') return;
-      const picked = window.udict && window.udict.pickDirectory && window.udict.pickDirectory();
-      if (picked) sendToFrame({ type: 'udict-dir-picked', path: picked });
+      if (!e.data) return;
+      if (e.data.type === 'udict-ready') {
+        frameReady = true;
+        flushPending();
+        return;
+      }
+      if (e.data.type === 'udict-pick-dir') {
+        const picked = window.udict && window.udict.pickDirectory && window.udict.pickDirectory();
+        if (picked) sendToFrame({ type: 'udict-dir-picked', path: picked });
+      }
     });
   </script>
 </body>

@@ -227,4 +227,6 @@ window.addEventListener('message', function(e){
   function escapeHtml(s) {
     return s.replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
   }
+
+  try { parent.postMessage({ type: 'udict-ready' }, '*'); } catch {}
 })();
