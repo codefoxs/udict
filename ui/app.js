@@ -273,7 +273,7 @@ document.addEventListener('keydown', function(e){
         </div>
         <p style="font-size:15px;line-height:1.7;color:#5C5B57;margin:0 0 18px;">
           一个离线 MDX/MDD 词典查询插件，支持多词典、多音频/图片资源、前缀建议、索引缓存、
-          中英文触发，全部在本地运行，不联网。
+         均在本地运行，无需联网。
         </p>
         <h3 style="font-size:13px;text-transform:uppercase;letter-spacing:0.8px;color:#8E8C85;margin:24px 0 10px;font-weight:600;">特性</h3>
         <ul style="margin:0;padding-left:20px;line-height:1.9;font-size:14px;color:#1F1E1D;">
@@ -282,16 +282,13 @@ document.addEventListener('keydown', function(e){
           <li>内嵌 HTTP 服务统一解析 sound:// / entry:// / 相对资源</li>
           <li>持久化 key 索引，冷启动前缀建议 0ms</li>
           <li>可折叠侧栏：词典跳转、字号调节、历史记录</li>
-          <li>强制浅色渲染，剥离 <code style="background:#F5F4EF;padding:1px 6px;border-radius:3px;font-size:13px;">prefers-color-scheme: dark</code></li>
         </ul>
         <h3 style="font-size:13px;text-transform:uppercase;letter-spacing:0.8px;color:#8E8C85;margin:24px 0 10px;font-weight:600;">项目地址</h3>
         <p style="margin:0;font-size:14px;font-family:Consolas,'SF Mono',monospace;background:#F5F4EF;padding:10px 14px;border-radius:6px;user-select:all;color:#D97757;">
           https://github.com/codefoxs/udict
         </p>
-        <p style="margin:6px 0 0;font-size:11px;color:#8E8C85;">（点击地址选中后复制到浏览器打开）</p>
         <p style="margin:28px 0 0;font-size:12px;color:#8E8C85;">
-          由 Claude Code 协同编写 · 以 Claude 奶油/珊瑚配色呈现
-        </p>
+          由 CodeFox 和 Claude Code 共同编写</p>
       </div>`;
     iframe.srcdoc = wrapHtml(about, fontScale);
     dictJump.innerHTML = '<li class="muted">（关于页面）</li>';
