@@ -111,6 +111,7 @@
 
   async function doLookup(word) {
     if (!word) return;
+    if (word.trim().toLowerCase() === 'udict') return showAbout();
     results.innerHTML = '<div class="empty">Looking up...</div>';
     const r = await fetch('/api/lookup?q=' + encodeURIComponent(word));
     const data = await r.json();
@@ -223,6 +224,52 @@ window.addEventListener('message', function(e){
       if (w) doLookup(w);
     }
   });
+
+  function showAbout() {
+    results.innerHTML = '';
+    const meta = document.createElement('div');
+    meta.className = 'entry-meta';
+    meta.textContent = '✦ About udict';
+    results.appendChild(meta);
+    const iframe = document.createElement('iframe');
+    iframe.className = 'entry-frame';
+    iframe.sandbox = 'allow-scripts allow-same-origin allow-popups';
+    results.appendChild(iframe);
+    currentIframe = iframe;
+    const about = `
+      <div style="max-width:640px;margin:30px auto;padding:28px 32px;font-family:'Segoe UI',-apple-system,system-ui,'PingFang SC',sans-serif;color:#1F1E1D;">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px;">
+          <svg viewBox="0 0 24 24" width="32" height="32" fill="#D97757"><path d="M12 2 L13.2 8.5 L19.5 6 L15 11.3 L22 12 L15 12.7 L19.5 18 L13.2 15.5 L12 22 L10.8 15.5 L4.5 18 L9 12.7 L2 12 L9 11.3 L4.5 6 L10.8 8.5 Z"/></svg>
+          <h1 style="margin:0;font-size:24px;font-weight:600;">udict</h1>
+          <span style="background:#F5DCD0;color:#D97757;padding:2px 10px;border-radius:12px;font-size:12px;font-weight:600;">uTools plugin</span>
+        </div>
+        <p style="font-size:15px;line-height:1.7;color:#5C5B57;margin:0 0 18px;">
+          一个离线 MDX/MDD 词典查询插件，支持多词典、多音频/图片资源、前缀建议、索引缓存、
+          中英文触发，全部在本地运行，不联网。
+        </p>
+        <h3 style="font-size:13px;text-transform:uppercase;letter-spacing:0.8px;color:#8E8C85;margin:24px 0 10px;font-weight:600;">特性</h3>
+        <ul style="margin:0;padding-left:20px;line-height:1.9;font-size:14px;color:#1F1E1D;">
+          <li>基于 <code style="background:#F5F4EF;padding:1px 6px;border-radius:3px;font-size:13px;">js-mdict</code> 直接解析 MDX/MDD</li>
+          <li>自动发现 <code style="background:#F5F4EF;padding:1px 6px;border-radius:3px;font-size:13px;">.mdd / .1.mdd / .2.mdd</code> 等分卷</li>
+          <li>内嵌 HTTP 服务统一解析 sound:// / entry:// / 相对资源</li>
+          <li>持久化 key 索引，冷启动前缀建议 0ms</li>
+          <li>可折叠侧栏：词典跳转、字号调节、历史记录</li>
+          <li>强制浅色渲染，剥离 <code style="background:#F5F4EF;padding:1px 6px;border-radius:3px;font-size:13px;">prefers-color-scheme: dark</code></li>
+        </ul>
+        <h3 style="font-size:13px;text-transform:uppercase;letter-spacing:0.8px;color:#8E8C85;margin:24px 0 10px;font-weight:600;">链接</h3>
+        <p style="margin:0;font-size:14px;">
+          <a href="https://github.com/codefoxs/udict" target="_blank"
+             style="color:#D97757;text-decoration:none;border-bottom:1px solid #F5DCD0;">
+            github.com/codefoxs/udict
+          </a>
+        </p>
+        <p style="margin:28px 0 0;font-size:12px;color:#8E8C85;">
+          由 Claude Code 协同编写 · 以 Claude 奶油/珊瑚配色呈现
+        </p>
+      </div>`;
+    iframe.srcdoc = wrapHtml(about, fontScale);
+    dictJump.innerHTML = '<li class="muted">（关于页面）</li>';
+  }
 
   function escapeHtml(s) {
     return s.replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
