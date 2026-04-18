@@ -41,6 +41,10 @@ window.udict = {
       });
     }
   },
+  exit() {
+    try { window.utools && window.utools.outPlugin && window.utools.outPlugin(); }
+    catch {}
+  },
   pickDirectory() {
     if (!window.utools || !window.utools.showOpenDialog) return null;
     const r = window.utools.showOpenDialog({

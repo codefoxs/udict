@@ -75,7 +75,26 @@
       e.preventDefault();
       if (currentSug.length) { activeIdx = (activeIdx - 1 + currentSug.length) % currentSug.length; renderSugActive(); }
     } else if (e.key === 'Escape') {
-      hideSuggest();
+      e.preventDefault();
+      handleEscape();
+    }
+  });
+
+  function handleEscape() {
+    if (currentSug.length) { hideSuggest(); return; }
+    if (qInput.value.length) {
+      qInput.value = '';
+      qInput.focus();
+    } else {
+      parent.postMessage({ type: 'udict-exit' }, '*');
+    }
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && document.activeElement !== qInput) {
+      e.preventDefault();
+      qInput.focus();
+      handleEscape();
     }
   });
 
@@ -210,6 +229,12 @@ window.addEventListener('message', function(e){
     if (el) el.scrollIntoView({behavior:'smooth', block:'start'});
   }
 });
+document.addEventListener('keydown', function(e){
+  if (e.key === 'Escape') {
+    e.preventDefault();
+    parent.postMessage({type:'udict-escape'}, '*');
+  }
+}, true);
 <\/script></body></html>`;
   }
 
@@ -222,6 +247,9 @@ window.addEventListener('message', function(e){
       qInput.value = w;
       qInput.focus();
       if (w) doLookup(w);
+    } else if (e.data.type === 'udict-escape') {
+      qInput.focus();
+      handleEscape();
     }
   });
 
