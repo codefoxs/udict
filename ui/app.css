@@ -77,6 +77,83 @@ body.side-collapsed #side-toggle { transform: rotate(180deg); }
 .entry-meta { padding: 8px 14px; font-size: 12px; color: var(--text-soft); background: var(--panel); border-bottom: 1px solid var(--border); border-radius: var(--radius-lg) var(--radius-lg) 0 0; }
 .empty { padding: 40px 20px; color: var(--text-muted); text-align: center; font-size: 14px; }
 
+/* ── Wordbook sidebar ────────────────────────── */
+.wb-list { list-style: none; margin: 0; padding: 0; }
+.wb-list li { display: flex; align-items: center; gap: 4px; padding: 6px 6px 6px 4px; border-radius: 6px; font-size: 13px; margin-bottom: 2px; cursor: pointer; transition: background 0.12s; }
+.wb-list li:hover { background: var(--accent-soft); }
+.wb-list li.active { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+.wb-list li.drag-over { border-top: 2px solid var(--accent); }
+.wb-list .wb-drag { cursor: grab; color: var(--text-muted); font-size: 12px; padding: 0 3px; user-select: none; }
+.wb-list .wb-drag:active { cursor: grabbing; }
+.wb-list .wb-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wb-list .wb-count { font-size: 11px; color: var(--text-muted); padding: 0 4px; font-variant-numeric: tabular-nums; }
+.wb-list .wb-del { border: 0; background: none; color: var(--text-muted); cursor: pointer; padding: 0 4px; font-size: 13px; border-radius: 3px; }
+.wb-list .wb-del:hover { color: var(--danger); background: var(--surface); }
+.wb-list .wb-fixed .wb-drag, .wb-list .wb-fixed .wb-del { visibility: hidden; }
+.wb-list .wb-new { cursor: default; }
+.wb-list .wb-new .wb-drag { visibility: visible; color: var(--accent); }
+.wb-list .wb-new-input { flex: 1; min-width: 0; border: 1px solid var(--accent); background: var(--surface); border-radius: 4px; padding: 3px 6px; font: inherit; font-size: 13px; color: var(--text); outline: none; }
+
+/* ── Collect star button ─────────────────────── */
+.icon-btn { padding: 8px; border-radius: var(--radius); background: var(--surface); border: 1px solid var(--border-strong); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text-soft); transition: background 0.12s, color 0.12s; }
+.icon-btn:hover { background: var(--accent-soft); color: var(--accent); border-color: var(--accent-soft); }
+.icon-btn svg { width: 18px; height: 18px; display: block; }
+#collect-btn .star-filled { display: none; }
+#collect-btn.collected .star-empty { display: none; }
+#collect-btn.collected .star-filled { display: block; }
+#collect-btn.collected { background: #FFF8E3; border-color: #EFD78A; }
+
+/* ── Modal ───────────────────────────────────── */
+.modal { position: absolute; inset: 0; background: rgba(31,30,29,0.28); display: flex; align-items: center; justify-content: center; z-index: 50; }
+.modal[hidden] { display: none; }
+.modal-card { background: var(--surface); border-radius: var(--radius-lg); box-shadow: var(--shadow-lg); width: 360px; max-width: 90%; max-height: 80%; display: flex; flex-direction: column; overflow: hidden; }
+.modal-head { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid var(--border); }
+.modal-title { font-size: 14px; font-weight: 600; color: var(--text); }
+.modal-close { background: none; border: 0; color: var(--text-muted); cursor: pointer; font-size: 14px; padding: 2px 8px; border-radius: 4px; }
+.modal-close:hover { color: var(--danger); background: var(--panel); }
+.modal-body { padding: 14px 16px; overflow: auto; flex: 1; }
+.modal-word { font-size: 13px; color: var(--text-soft); margin-bottom: 10px; }
+.modal-word b { color: var(--accent); font-size: 14px; }
+.collect-books { list-style: none; margin: 0; padding: 0; }
+.collect-books li { padding: 8px 10px; border-radius: 6px; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+.collect-books li:hover { background: var(--panel); }
+.collect-books input[type=checkbox] { accent-color: var(--accent); margin: 0; }
+.modal-foot { display: flex; gap: 8px; justify-content: flex-end; padding: 12px 16px; border-top: 1px solid var(--border); background: var(--panel); }
+
+/* ── Wordbook table page ─────────────────────── */
+.wb-page { padding: 14px 18px; overflow: auto; height: 100%; background: var(--surface); }
+.wb-page-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+.wb-page-head h2 { margin: 0; font-size: 18px; font-weight: 600; color: var(--text); }
+.wb-page-head .count { font-size: 12px; color: var(--text-muted); }
+.wb-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.wb-table th { text-align: left; padding: 10px 12px; background: var(--panel); color: var(--text-soft); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 0.6px; border-bottom: 1px solid var(--border); }
+.wb-table th.sortable { cursor: pointer; user-select: none; }
+.wb-table th.sortable:hover { color: var(--accent); }
+.wb-table .cell-src { color: var(--text-soft); font-size: 12px; }
+.wb-table td { padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+.wb-table tr:hover td { background: #FDFCF8; }
+.wb-table .cell-word { font-weight: 600; color: var(--accent); cursor: pointer; }
+.wb-table .cell-word:hover { text-decoration: underline; }
+.wb-table .cell-time { color: var(--text-muted); font-size: 12px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.wb-table .cell-note { min-width: 280px; }
+.wb-table .cell-note .note-row { display: flex; align-items: center; gap: 6px; }
+.wb-table .cell-note .note-text { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text); font-size: 13px; }
+.wb-table .cell-note .note-text.empty { color: var(--text-muted); font-style: italic; }
+.wb-table .cell-note .note-edit { border: 0; background: var(--panel); color: var(--text-soft); cursor: pointer; padding: 3px 8px; border-radius: 4px; font-size: 12px; flex-shrink: 0; }
+.wb-table .cell-note .note-edit:hover { background: var(--accent-soft); color: var(--accent); }
+.wb-table .cell-diff select { padding: 3px 6px; border: 1px solid var(--border); border-radius: 4px; background: var(--surface); color: var(--text); font: inherit; font-size: 13px; cursor: pointer; }
+.wb-table .cell-diff select:focus { outline: none; border-color: var(--accent); }
+.note-card { width: 480px; }
+.note-card textarea { width: 100%; min-height: 180px; padding: 10px 12px; border: 1px solid var(--border-strong); border-radius: var(--radius); font: inherit; font-size: 14px; color: var(--text); background: var(--surface); resize: vertical; outline: none; box-sizing: border-box; }
+.note-card textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.note-card .modal-foot { justify-content: space-between; }
+.wb-table .cell-op button { border: 0; background: none; color: var(--text-muted); cursor: pointer; font-size: 13px; padding: 4px 6px; border-radius: 4px; }
+.wb-table .cell-op button:hover { color: var(--danger); background: var(--panel); }
+.wb-stars { display: inline-flex; gap: 2px; cursor: pointer; user-select: none; }
+.wb-stars span { font-size: 16px; color: #D9D6CB; line-height: 1; }
+.wb-stars span.on { color: #EABE5A; }
+.wb-empty { padding: 40px 20px; color: var(--text-muted); text-align: center; font-style: italic; }
+
 /* ── Buttons ─────────────────────────────────── */
 button { padding: 6px 14px; border: 1px solid var(--border-strong); background: var(--surface); border-radius: var(--radius); cursor: pointer; font-size: 13px; color: var(--text); transition: background 0.12s, border-color 0.12s; font-family: inherit; }
 button:hover { background: var(--accent-soft); border-color: var(--accent-soft); color: var(--accent); }

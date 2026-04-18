@@ -19,6 +19,13 @@
     </div>
     <div class="side-body">
       <div class="side-section">
+        <div class="side-title">
+          生词本
+          <button id="wb-add" title="新建生词本">+</button>
+        </div>
+        <ul id="wordbooks" class="wb-list"></ul>
+      </div>
+      <div class="side-section">
         <div class="side-title">字号</div>
         <div class="font-ctrl">
           <button id="font-dec" title="缩小">A−</button>
@@ -43,6 +50,10 @@
   <main id="main">
     <div id="bar">
       <input id="q" type="text" placeholder="Type a word..." autocomplete="off" autofocus/>
+      <button id="collect-btn" class="icon-btn" title="收录到生词本" type="button">
+        <svg class="star-empty" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><polygon points="12,2.5 14.9,9 22,9.6 16.5,14.4 18.3,21.5 12,17.7 5.7,21.5 7.5,14.4 2,9.6 9.1,9"/></svg>
+        <svg class="star-filled" viewBox="0 0 24 24" fill="#EABE5A" stroke="#D9A842" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true"><polygon points="12,2.5 14.9,9 22,9.6 16.5,14.4 18.3,21.5 12,17.7 5.7,21.5 7.5,14.4 2,9.6 9.1,9"/></svg>
+      </button>
       <a id="settings-link" href="/settings" title="设置">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <circle cx="12" cy="12" r="3"/>
@@ -52,6 +63,38 @@
       <ul id="suggest"></ul>
     </div>
     <div id="results"></div>
+    <div id="note-modal" class="modal" hidden>
+      <div class="modal-card note-card">
+        <div class="modal-head">
+          <span class="modal-title">编辑备注</span>
+          <button class="modal-close" id="note-close" title="关闭">✕</button>
+        </div>
+        <div class="modal-body">
+          <div class="modal-word" id="note-word"></div>
+          <textarea id="note-text" placeholder="输入备注..."></textarea>
+        </div>
+        <div class="modal-foot">
+          <button id="note-confirm" class="primary">确认</button>
+          <button id="note-cancel">取消</button>
+        </div>
+      </div>
+    </div>
+    <div id="collect-modal" class="modal" hidden>
+      <div class="modal-card">
+        <div class="modal-head">
+          <span class="modal-title">收录到生词本</span>
+          <button class="modal-close" id="collect-close" title="关闭">✕</button>
+        </div>
+        <div class="modal-body">
+          <div class="modal-word" id="collect-word"></div>
+          <ul id="collect-books" class="collect-books"></ul>
+        </div>
+        <div class="modal-foot">
+          <button id="collect-remove" class="danger">全部移除</button>
+          <button id="collect-save" class="primary">保存</button>
+        </div>
+      </div>
+    </div>
   </main>
   <script src="/app.js"></script>
 </body>
