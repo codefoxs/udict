@@ -14,7 +14,7 @@
       "cmds": [
         "udict",
         { "type": "over", "label": "udict 查词" },
-        { "type": "regex", "label": "udict 查词", "match": "/^[a-zA-Z]{1,50}$/" }
+        { "type": "regex", "label": "udict 查词", "match": "/^[\\u4e00-\\u9fa5a-zA-Z]{1,50}$/" }
       ]
     }
   ]

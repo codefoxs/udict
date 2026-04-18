@@ -11,6 +11,30 @@
   let currentSug = [];
   let currentIframe = null;
   let fontScale = Number(localStorage.getItem('udict.fontScale')) || 100;
+  const historyEl = document.getElementById('history');
+  let history = [];
+  try { history = JSON.parse(localStorage.getItem('udict.history') || '[]'); } catch {}
+
+  function renderHistory() {
+    if (!history.length) { historyEl.innerHTML = '<li class="muted">（暂无）</li>'; return; }
+    historyEl.innerHTML = history.slice(0, 30).map(w =>
+      `<li data-word="${escapeHtml(w)}"><span class="dj-key">${escapeHtml(w)}</span></li>`
+    ).join('');
+    historyEl.querySelectorAll('li').forEach(li => {
+      li.addEventListener('click', () => { qInput.value = li.dataset.word; doLookup(li.dataset.word); });
+    });
+  }
+  function pushHistory(w) {
+    w = w.trim(); if (!w) return;
+    history = [w, ...history.filter(x => x !== w)].slice(0, 50);
+    localStorage.setItem('udict.history', JSON.stringify(history));
+    renderHistory();
+  }
+  document.getElementById('hist-clear').addEventListener('click', e => {
+    e.stopPropagation();
+    history = []; localStorage.removeItem('udict.history'); renderHistory();
+  });
+  renderHistory();
 
   // Sidebar toggle
   if (localStorage.getItem('udict.sideCollapsed') === '1') document.body.classList.add('side-collapsed');
@@ -94,6 +118,7 @@
       results.innerHTML = '<div class="empty">No results for "' + escapeHtml(word) + '"</div>';
       return;
     }
+    pushHistory(word);
     results.innerHTML = '';
     const meta = document.createElement('div');
     meta.className = 'entry-meta';
@@ -151,8 +176,9 @@
 <style>
   :root{color-scheme:light!important;}
   html,body{background:#fff!important;color:#222!important;}
-  html{font-size:${scale}%;}
-  body{margin:0;padding:10px;font-family:-apple-system,"Segoe UI",system-ui,sans-serif;}
+  html{font-size:${scale}%;overflow-x:hidden;}
+  body{margin:0;padding:10px;font-family:-apple-system,"Segoe UI",system-ui,sans-serif;overflow-x:hidden;word-wrap:break-word;}
+  img,video,table{max-width:100%!important;height:auto;}
   .udict-entry-head{font:600 13px -apple-system,"Segoe UI",sans-serif;color:#4a90e2;padding:6px 0;border-bottom:1px solid #eee;margin-bottom:8px;}
   .udict-sep{border:0;border-top:2px dashed #ccd;margin:18px 0;}
 </style>
