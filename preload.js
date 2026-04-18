@@ -34,12 +34,9 @@ window.udict = {
   onEnter(cb) {
     if (window.utools && window.utools.onPluginEnter) {
       window.utools.onPluginEnter(({ payload }) => {
-        let word = window._udictPending || '';
-        window._udictPending = '';
-        if (!word) {
-          if (typeof payload === 'string') word = payload;
-          else if (payload && typeof payload === 'object') word = payload.text || payload.description || '';
-        }
+        let word = '';
+        if (typeof payload === 'string') word = payload;
+        else if (payload && typeof payload === 'object') word = payload.text || payload.description || '';
         cb(word);
       });
     }
@@ -54,22 +51,3 @@ window.udict = {
   }
 };
 
-// uTools main-input suggestions. onMainPush is called as user types after keyword.
-if (window.utools && window.utools.onMainPush) {
-  window.utools.onMainPush(
-    ({ code, type, payload }) => {
-      if (!mgr) return [];
-      const q = (typeof payload === 'string' ? payload : '').trim();
-      if (!q) return [];
-      const words = mgr.prefixSync(q, 8);
-      if (!words.length) return [{ icon: 'logo.png', text: q, title: 'udict', description: 'Look up "' + q + '"' }];
-      return words.map(w => ({ icon: 'logo.png', text: w, title: 'udict', description: w }));
-    },
-    (action, option) => {
-      const opt = option || (action && action.option) || {};
-      const word = opt.text || opt.description || (action && action.payload) || '';
-      window._udictPending = String(word);
-      // Returning nothing lets uTools enter the plugin; onPluginEnter reads _udictPending.
-    }
-  );
-}

@@ -10,7 +10,6 @@
     {
       "code": "udict",
       "explain": "Look up a word in local MDX dictionaries",
-      "mainPush": true,
       "cmds": [
         "udict",
         { "type": "over", "label": "udict 查词" },
