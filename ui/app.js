@@ -198,6 +198,11 @@ document.addEventListener('click', function(e){
       parent.postMessage({type:'udict-entry', word:t.dataset.udictEntry}, '*');
       return;
     }
+    if (t.tagName === 'A' && t.href && /^https?:/i.test(t.href)) {
+      e.preventDefault();
+      parent.postMessage({type:'udict-open-external', url:t.href}, '*');
+      return;
+    }
     t = t.parentNode;
   }
 }, true);

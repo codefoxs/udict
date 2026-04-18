@@ -41,6 +41,15 @@ window.udict = {
       });
     }
   },
+  openExternal(url) {
+    try {
+      if (window.utools && window.utools.shellOpenExternal) return window.utools.shellOpenExternal(url);
+      if (window.require) {
+        const { shell } = window.require('electron');
+        if (shell && shell.openExternal) return shell.openExternal(url);
+      }
+    } catch {}
+  },
   pickDirectory() {
     if (!window.utools || !window.utools.showOpenDialog) return null;
     const r = window.utools.showOpenDialog({

@@ -44,6 +44,10 @@
         flushPending();
         return;
       }
+      if (e.data.type === 'udict-open-external' && e.data.url) {
+        if (window.udict && window.udict.openExternal) window.udict.openExternal(e.data.url);
+        return;
+      }
       if (e.data.type === 'udict-pick-dir') {
         const picked = window.udict && window.udict.pickDirectory && window.udict.pickDirectory();
         if (picked) sendToFrame({ type: 'udict-dir-picked', path: picked });
