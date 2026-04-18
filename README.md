@@ -28,12 +28,6 @@ node src/server.js
 # open http://127.0.0.1:7219/
 ```
 
-## Install in uTools
-
-1. Open uTools settings -> plugins -> dev -> create new.
-2. Point to `D:\code\Claude_code\udict\plugin.json`.
-3. Type keyword `udict` in uTools main box.
-
 ## Configure dictionaries
 
 Edit `config.json`:
@@ -47,3 +41,4 @@ Edit `config.json`:
 ```
 
 The loader auto-discovers sibling `.mdd` / `.1.mdd` / `.2.mdd` based on the mdx basename.
+
