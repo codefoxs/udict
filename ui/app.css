@@ -1,6 +1,6 @@
 * { box-sizing: border-box; }
 html, body { margin: 0; padding: 0; height: 100%; font-family: -apple-system, "Segoe UI", system-ui, sans-serif; background: #fff; color: #222; color-scheme: light; }
-body { display: flex; flex-direction: row; }
+body { display: flex; flex-direction: row; overflow: hidden; }
 
 #sidebar { width: 200px; flex-shrink: 0; border-right: 1px solid #e5e5e5; background: #fafbfc; display: flex; flex-direction: column; transition: width 0.2s; }
 body.side-collapsed #sidebar { width: 32px; }
@@ -25,7 +25,7 @@ body.side-collapsed #side-toggle { transform: rotate(180deg); }
 .dict-jump .dj-name { font-weight: 600; color: #4a90e2; display: block; }
 .dict-jump .dj-key { color: #666; font-size: 11px; }
 
-#main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+#main { flex: 1; min-width: 0; display: flex; flex-direction: column; overflow: hidden; }
 
 #bar { position: relative; padding: 10px; border-bottom: 1px solid #ddd; background: #fafafa; display: flex; gap: 8px; align-items: center; }
 #q { flex: 1; padding: 8px 12px; font-size: 16px; border: 1px solid #ccc; border-radius: 6px; outline: none; }

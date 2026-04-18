@@ -1,12 +1,12 @@
 {
   "dictionaries": [
     {
-      "name": "牛津高阶10",
-      "mdx": "D:/Dict/牛津10/牛津高阶（第10版 英汉双解） V5_3.mdx"
+      "name": "LDOCE5++ V 1-35",
+      "mdx": "D:\\Dict\\LM5\\LDOCE5++ V 1-35.mdx"
     },
     {
-      "name": "LDOCE5++ V 1-35",
-      "mdx": "D:/Dict/LM5/LDOCE5++ V 1-35.mdx"
+      "name": "牛津高阶（第10版 英汉双解） V5_3",
+      "mdx": "D:\\Dict\\牛津10\\牛津高阶（第10版 英汉双解） V5_3.mdx"
     }
   ]
 }
