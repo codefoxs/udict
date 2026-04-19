@@ -284,6 +284,8 @@ document.addEventListener('keydown', function(e){
     iframe.sandbox = 'allow-scripts allow-same-origin allow-popups';
     results.appendChild(iframe);
     currentIframe = iframe;
+    const code = 'background:#F5F4EF;padding:1px 6px;border-radius:3px;font-size:13px;font-family:Consolas,monospace;';
+    const h3 = 'font-size:13px;text-transform:uppercase;letter-spacing:0.8px;color:#8E8C85;margin:24px 0 10px;font-weight:600;';
     const about = `
       <div style="max-width:640px;margin:30px auto;padding:28px 32px;font-family:'Segoe UI',-apple-system,system-ui,'PingFang SC',sans-serif;color:#1F1E1D;">
         <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px;">
@@ -292,23 +294,28 @@ document.addEventListener('keydown', function(e){
           <span style="background:#F5DCD0;color:#D97757;padding:2px 10px;border-radius:12px;font-size:12px;font-weight:600;">uTools plugin</span>
         </div>
         <p style="font-size:15px;line-height:1.7;color:#5C5B57;margin:0 0 18px;">
-          一个离线 MDX/MDD 词典查询插件，支持多词典、多音频/图片资源、前缀建议、索引缓存、
-         均在本地运行，无需联网。
+          一个离线 MDX/MDD 词典查询插件，内置生词本。所有查询均在本地运行，无需联网。
         </p>
-        <h3 style="font-size:13px;text-transform:uppercase;letter-spacing:0.8px;color:#8E8C85;margin:24px 0 10px;font-weight:600;">特性</h3>
+        <h3 style="${h3}">特性</h3>
         <ul style="margin:0;padding-left:20px;line-height:1.9;font-size:14px;color:#1F1E1D;">
-          <li>基于 <code style="background:#F5F4EF;padding:1px 6px;border-radius:3px;font-size:13px;">js-mdict</code> 直接解析 MDX/MDD</li>
-          <li>自动发现 <code style="background:#F5F4EF;padding:1px 6px;border-radius:3px;font-size:13px;">.mdd / .1.mdd / .2.mdd</code> 等分卷</li>
-          <li>内嵌 HTTP 服务统一解析 sound:// / entry:// / 相对资源</li>
-          <li>持久化 key 索引，冷启动前缀建议 0ms</li>
-          <li>可折叠侧栏：词典跳转、字号调节、历史记录</li>
+          <li>直接解析本地 <code style="${code}">.mdx / .mdd</code>，自动发现 <code style="${code}">.1.mdd / .2.mdd</code> 分卷</li>
+          <li>多词典同时查询，按来源分区展示；发音 / 图片 / 交叉引用全支持</li>
+          <li>前缀建议 + 持久化 key 索引缓存，冷启动 0ms</li>
+          <li>生词本：多本管理、1–5 星难度、自定义备注、默认本自动汇总</li>
+          <li>可折叠侧栏：词典跳转、字号调节、历史记录、生词本</li>
         </ul>
-        <h3 style="font-size:13px;text-transform:uppercase;letter-spacing:0.8px;color:#8E8C85;margin:24px 0 10px;font-weight:600;">项目地址</h3>
+        <h3 style="${h3}">致谢</h3>
+        <ul style="margin:0;padding-left:20px;line-height:1.9;font-size:14px;color:#1F1E1D;">
+          <li><b>js-mdict</b> — 纯 JS 的 MDX/MDD 解析器，查词引擎核心 <span style="color:#8E8C85;">· github.com/terasum/js-mdict</span></li>
+          <li><b>uTools</b> — 键盘优先的插件宿主 <span style="color:#8E8C85;">· u.tools</span></li>
+          <li>感谢 LDOCE、Oxford Advanced Learner's 等词典作者及 <code style="${code}">.mdx</code> 社区维护者</li>
+        </ul>
+        <h3 style="${h3}">项目地址</h3>
         <p style="margin:0;font-size:14px;font-family:Consolas,'SF Mono',monospace;background:#F5F4EF;padding:10px 14px;border-radius:6px;user-select:all;color:#D97757;">
           https://github.com/codefoxs/udict
         </p>
         <p style="margin:28px 0 0;font-size:12px;color:#8E8C85;">
-          由 CodeFox 和 Claude Code 共同编写</p>
+          由 CodeFox 和 Claude Code 共同编写 · MIT License</p>
       </div>`;
     iframe.srcdoc = wrapHtml(about, fontScale);
     dictJump.innerHTML = '<li class="muted">（关于页面）</li>';
