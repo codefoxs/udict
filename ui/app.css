@@ -190,8 +190,6 @@ body.settings { display: block; background: var(--bg); }
 .dict-list li.drag-over { box-shadow: inset 0 2px 0 var(--accent); }
 .dict-list .dict-drag { cursor: grab; color: var(--text-muted); font-size: 16px; padding: 0 8px; user-select: none; flex-shrink: 0; }
 .dict-list .dict-drag:active { cursor: grabbing; }
-.dict-list .ops { display: flex; gap: 4px; align-items: center; flex-shrink: 0; }
-.dict-list .ops .up, .dict-list .ops .down { padding: 4px 8px; font-size: 10px; min-width: 28px; }
 
 .scan-list { max-height: 320px; overflow: auto; }
 .scan-list li { padding: 8px 14px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; color: var(--text-muted); font-size: 13px; background: var(--surface); }

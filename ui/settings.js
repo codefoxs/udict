@@ -37,22 +37,12 @@
             <div class="path">${esc(d.mdx)}</div>
             <div class="meta">${st.loaded ? 'loaded' : 'lazy'} · ${st.cachedKeys || 0} keys${st.mddCount != null ? ' · ' + st.mddCount + ' mdd' : ''}</div>
           </div>
-          <div class="ops">
-            <button data-idx="${i}" class="up" title="上移">▲</button>
-            <button data-idx="${i}" class="down" title="下移">▼</button>
-            <button data-idx="${i}" class="danger remove">Remove</button>
-          </div>
+          <button data-idx="${i}" class="danger remove">Remove</button>
         </div>
       </li>`;
     }).join('');
     dictList.querySelectorAll('button.remove').forEach(b => {
       b.addEventListener('click', () => removeDict(+b.dataset.idx));
-    });
-    dictList.querySelectorAll('button.up').forEach(b => {
-      b.addEventListener('click', () => moveDict(+b.dataset.idx, -1));
-    });
-    dictList.querySelectorAll('button.down').forEach(b => {
-      b.addEventListener('click', () => moveDict(+b.dataset.idx, +1));
     });
     dictList.querySelectorAll('li').forEach(li => {
       li.addEventListener('dragstart', e => {
@@ -76,13 +66,6 @@
     });
   }
 
-  async function moveDict(idx, delta) {
-    const target = idx + delta;
-    if (target < 0 || target >= currentDicts.length) return;
-    const [m] = currentDicts.splice(idx, 1);
-    currentDicts.splice(target, 0, m);
-    await saveDicts();
-  }
 
   async function saveDicts() {
     const r = await fetch('/api/config', {
