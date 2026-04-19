@@ -334,9 +334,16 @@ document.addEventListener('keydown', function(e){
     wbListEl.querySelectorAll('li').forEach(li => {
       const id = li.dataset.id;
       li.addEventListener('click', e => {
-        if (e.target.closest('.wb-del') || e.target.closest('.wb-drag')) return;
+        if (e.target.closest('.wb-del') || e.target.closest('.wb-drag') || e.target.closest('.wb-name-edit')) return;
         openWordbookPage(id);
       });
+      const nameEl = li.querySelector('.wb-name');
+      if (id !== DEFAULT_BOOK_ID && nameEl) {
+        nameEl.addEventListener('dblclick', e => {
+          e.stopPropagation();
+          startRename(li, id);
+        });
+      }
       const delBtn = li.querySelector('.wb-del');
       delBtn.addEventListener('click', e => {
         e.stopPropagation();
@@ -372,6 +379,33 @@ document.addEventListener('keydown', function(e){
       });
     });
   }
+  function startRename(li, id) {
+    const nameEl = li.querySelector('.wb-name');
+    const book = wordbooks.find(b => b.id === id);
+    if (!nameEl || !book) return;
+    const inp = document.createElement('input');
+    inp.type = 'text';
+    inp.className = 'wb-new-input';
+    inp.maxLength = 40;
+    inp.value = book.name;
+    nameEl.replaceWith(inp);
+    inp.focus();
+    inp.select();
+    let done = false;
+    const commit = () => {
+      if (done) return;
+      done = true;
+      const name = inp.value.trim();
+      if (name && name !== book.name) { book.name = name; saveBooks(); }
+      renderWordbooks();
+    };
+    inp.addEventListener('keydown', ev => {
+      if (ev.key === 'Enter') { ev.preventDefault(); ev.stopPropagation(); commit(); }
+      else if (ev.key === 'Escape') { ev.preventDefault(); ev.stopPropagation(); done = true; renderWordbooks(); }
+    });
+    inp.addEventListener('blur', commit);
+  }
+
   document.getElementById('wb-add').addEventListener('click', e => {
     e.stopPropagation();
     if (wbListEl.querySelector('.wb-new')) return;
