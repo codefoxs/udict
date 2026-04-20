@@ -1,4 +1,5 @@
 (function () {
+  const BASE = (window.udict && window.udict.base) || '';
   const qInput = document.getElementById('q');
   const sugList = document.getElementById('suggest');
   const results = document.getElementById('results');
@@ -119,7 +120,7 @@
   async function doSuggest() {
     const q = qInput.value.trim();
     if (!q) return hideSuggest();
-    const r = await fetch('/api/prefix?q=' + encodeURIComponent(q));
+    const r = await fetch(BASE + '/api/prefix?q=' + encodeURIComponent(q));
     const { words } = await r.json();
     currentSug = words || [];
     activeIdx = -1;
@@ -150,7 +151,7 @@
     if (!word) return;
     if (word.trim().toLowerCase() === 'udict') return showAbout();
     results.innerHTML = '<div class="empty">Looking up...</div>';
-    const r = await fetch('/api/lookup?q=' + encodeURIComponent(word));
+    const r = await fetch(BASE + '/api/lookup?q=' + encodeURIComponent(word));
     const data = await r.json();
     if (!data.results || !data.results.length) {
       results.innerHTML = '<div class="empty">No results for "' + escapeHtml(word) + '"</div>';
@@ -212,7 +213,7 @@
   }
 
   function wrapHtml(bodyHtml, scale) {
-    return `<!doctype html><html><head><meta charset="utf-8"/><meta name="color-scheme" content="light"/><base href="/"/>
+    return `<!doctype html><html><head><meta charset="utf-8"/><meta name="color-scheme" content="light"/><base href="${BASE}/"/>
 <style>
   :root{color-scheme:light!important;}
   html,body{background:#fff!important;color:#1F1E1D!important;}

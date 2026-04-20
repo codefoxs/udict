@@ -1,4 +1,5 @@
 (function () {
+  const BASE = (window.udict && window.udict.base) || '';
   const dictList = document.getElementById('dict-list');
   const scanSection = document.getElementById('scan-section');
   const scanDir = document.getElementById('scan-dir');
@@ -16,7 +17,7 @@
   let currentDicts = [];
 
   async function loadConfig() {
-    const r = await fetch('/api/config');
+    const r = await fetch(BASE + '/api/config');
     const { config, status } = await r.json();
     currentDicts = config.dictionaries || [];
     renderDicts(status);
@@ -68,7 +69,7 @@
 
 
   async function saveDicts() {
-    const r = await fetch('/api/config', {
+    const r = await fetch(BASE + '/api/config', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ dictionaries: currentDicts })
@@ -114,7 +115,7 @@
   });
 
   async function scanDirectory(dir) {
-    const r = await fetch('/api/scan?path=' + encodeURIComponent(dir));
+    const r = await fetch(BASE + '/api/scan?path=' + encodeURIComponent(dir));
     if (!r.ok) {
       const j = await r.json().catch(() => ({}));
       alert('Scan failed: ' + (j.error || r.status));
@@ -150,7 +151,7 @@
   }
 
   async function loadCache() {
-    const r = await fetch('/api/cache');
+    const r = await fetch(BASE + '/api/cache');
     const s = await r.json();
     cacheInfo.innerHTML = `<div><strong>Dir:</strong> <code>${esc(s.dir)}</code></div>
       <div><strong>Files:</strong> ${s.files} · <strong>Size:</strong> ${fmtBytes(s.bytes)}</div>`;
@@ -158,12 +159,12 @@
 
   document.getElementById('btn-clear-cache').addEventListener('click', async () => {
     if (!confirm('Clear udict cache?')) return;
-    await fetch('/api/cache', { method: 'DELETE' });
+    await fetch(BASE + '/api/cache', { method: 'DELETE' });
     loadCache();
   });
 
   document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') { e.preventDefault(); location.href = '/'; }
+    if (e.key === 'Escape') { e.preventDefault(); location.href = 'index.html'; }
   });
 
   loadConfig();
