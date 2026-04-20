@@ -216,8 +216,8 @@
 <style>
   :root{color-scheme:light!important;}
   html,body{background:#fff!important;color:#1F1E1D!important;}
-  html{font-size:${scale}%;overflow-x:hidden;}
-  body{margin:0;padding:14px 18px;font-family:"Segoe UI",-apple-system,system-ui,"PingFang SC","Microsoft YaHei",sans-serif;word-wrap:break-word;overflow-x:hidden;}
+  html{font-size:${scale}%;overflow-x:hidden!important;}
+  body{margin:0;padding:14px 18px;font-family:"Segoe UI",-apple-system,system-ui,"PingFang SC","Microsoft YaHei",sans-serif;word-wrap:break-word;}
   img,video,table{max-width:100%!important;height:auto;}
   .udict-entry-head{font:600 12px "Segoe UI",system-ui,sans-serif;color:#D97757;padding:6px 0;border-bottom:1px solid #E8E6DC;margin-bottom:10px;letter-spacing:0.3px;}
   .udict-sep{border:0;border-top:1px dashed #D9D6CB;margin:20px 0;}
