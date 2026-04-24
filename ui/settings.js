@@ -91,27 +91,12 @@
   }
 
   document.getElementById('btn-pick').addEventListener('click', () => {
-    // Ask parent (plugin host) for directory via utools dialog.
-    // Fallback: prompt.
-    parent.postMessage({ type: 'udict-pick-dir' }, '*');
-  });
-
-  window.addEventListener('message', async e => {
-    if (!e.data) return;
-    if (e.data.type === 'udict-dir-picked' && e.data.path) {
-      await scanDirectory(e.data.path);
-    }
-  });
-
-  // Fallback if not running inside the plugin host: prompt
-  let picked = false;
-  window.addEventListener('message', () => { picked = true; });
-  document.getElementById('btn-pick').addEventListener('click', () => {
-    setTimeout(() => {
-      if (picked) return;
+    const dir = window.udict && window.udict.pickDirectory && window.udict.pickDirectory();
+    if (dir) scanDirectory(dir);
+    else if (!(window.udict && window.udict.pickDirectory)) {
       const p = prompt('Dictionary directory path:');
       if (p) scanDirectory(p);
-    }, 300);
+    }
   });
 
   async function scanDirectory(dir) {

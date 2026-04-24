@@ -105,7 +105,7 @@
       qInput.value = '';
       qInput.focus();
     } else {
-      parent.postMessage({ type: 'udict-exit' }, '*');
+      if (window.udict && window.udict.exit) window.udict.exit();
     }
   }
 
@@ -624,5 +624,12 @@ document.addEventListener('keydown', function(e){
     });
   }
 
-  try { parent.postMessage({ type: 'udict-ready' }, '*'); } catch {}
+  if (window.udict && window.udict.onEnter) {
+    window.udict.onEnter(word => {
+      if (!word) return;
+      qInput.value = word;
+      qInput.focus();
+      doLookup(word);
+    });
+  }
 })();
