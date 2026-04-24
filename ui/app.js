@@ -14,6 +14,35 @@
   let currentWord = '';
   let fontScale = Number(localStorage.getItem('udict.fontScale')) || 100;
 
+  // ── Theme ────────────────────────────────────
+  let themeMode = localStorage.getItem('udict.theme') || 'system';
+  const darkMql = window.matchMedia('(prefers-color-scheme: dark)');
+  function resolveTheme() {
+    if (themeMode === 'dark') return 'dark';
+    if (themeMode === 'light') return 'light';
+    if (window.udict && typeof window.udict.isDark === 'function') {
+      try { return window.udict.isDark() ? 'dark' : 'light'; } catch {}
+    }
+    return darkMql.matches ? 'dark' : 'light';
+  }
+  let activeTheme = resolveTheme();
+  function applyTheme() {
+    activeTheme = resolveTheme();
+    document.documentElement.setAttribute('data-theme', activeTheme);
+    document.querySelectorAll('#theme-ctrl button').forEach(b => {
+      b.classList.toggle('active', b.dataset.theme === themeMode);
+    });
+    if (currentIframe && currentIframe.contentWindow) {
+      try { currentIframe.contentWindow.postMessage({ type: 'udict-theme', theme: activeTheme }, '*'); } catch {}
+    }
+  }
+  function setThemeMode(mode) {
+    themeMode = mode;
+    localStorage.setItem('udict.theme', mode);
+    applyTheme();
+  }
+  darkMql.addEventListener('change', () => { if (themeMode === 'system') applyTheme(); });
+
   // ── Wordbook data ────────────────────────────
   const DEFAULT_BOOK_ID = 'default';
   let wordbooks = [];
@@ -74,6 +103,13 @@
   document.getElementById('font-dec').addEventListener('click', () => { fontScale = Math.max(60, fontScale - 10); applyFont(); });
   document.getElementById('font-reset').addEventListener('click', () => { fontScale = 100; applyFont(); });
   fontVal.textContent = fontScale + '%';
+
+  document.getElementById('theme-ctrl').addEventListener('click', e => {
+    const btn = e.target.closest('button[data-theme]');
+    if (!btn) return;
+    setThemeMode(btn.dataset.theme);
+  });
+  applyTheme();
 
   qInput.addEventListener('input', () => {
     clearTimeout(sugTimer);
@@ -229,15 +265,22 @@
   }
 
   function wrapHtml(bodyHtml, scale) {
-    return `<!doctype html><html><head><meta charset="utf-8"/><meta name="color-scheme" content="light"/><base href="${BASE}/"/>
+    const theme = activeTheme;
+    return `<!doctype html><html data-theme="${theme}"><head><meta charset="utf-8"/><meta name="color-scheme" content="${theme}"/><base href="${BASE}/"/>
 <style>
-  :root{color-scheme:light!important;}
-  html,body{background:#fff!important;color:#1F1E1D!important;}
+  :root{color-scheme:${theme};--udict-bg:#fff;--udict-fg:#1F1E1D;--udict-soft:#5C5B57;--udict-muted:#8E8C85;--udict-accent:#D97757;--udict-accent-soft:#F5DCD0;--udict-border:#E8E6DC;--udict-sep:#D9D6CB;--udict-panel:#F5F4EF;}
+  html[data-theme="dark"]{--udict-bg:#1F1E1D;--udict-fg:#EDEAE0;--udict-soft:#B5B1A5;--udict-muted:#7F7C73;--udict-accent:#E4A177;--udict-accent-soft:#4A3326;--udict-border:#3A3835;--udict-sep:#4A4844;--udict-panel:#252421;}
+  html,body{background:var(--udict-bg)!important;color:var(--udict-fg)!important;}
   html{font-size:${scale}%;overflow-x:hidden!important;}
   body{margin:0;padding:14px 18px;font-family:"Segoe UI",-apple-system,system-ui,"PingFang SC","Microsoft YaHei",sans-serif;word-wrap:break-word;}
   img,video,table{max-width:100%!important;height:auto;}
-  .udict-entry-head{font:600 12px "Segoe UI",system-ui,sans-serif;color:#D97757;padding:6px 0;border-bottom:1px solid #E8E6DC;margin-bottom:10px;letter-spacing:0.3px;}
-  .udict-sep{border:0;border-top:1px dashed #D9D6CB;margin:20px 0;}
+  .udict-entry-head{font:600 12px "Segoe UI",system-ui,sans-serif;color:var(--udict-accent);padding:6px 0;border-bottom:1px solid var(--udict-border);margin-bottom:10px;letter-spacing:0.3px;}
+  .udict-sep{border:0;border-top:1px dashed var(--udict-sep);margin:20px 0;}
+  html[data-theme="dark"] body :is(h1,h2,h3,h4,h5,h6,p,div,span,li,dt,dd,td,th,em,strong,i,b,u){color:var(--udict-fg);}
+  html[data-theme="dark"] body a,html[data-theme="dark"] body a:link,html[data-theme="dark"] body a:visited{color:var(--udict-accent);}
+  /* Oxford collapse / unbox / body containers */
+  html[data-theme="dark"] body :is(.collapse,.unbox,.body,[class*="-box"],[class*="_box"]){background-color:var(--udict-panel)!important;border-color:var(--udict-border)!important;}
+  html[data-theme="dark"] body :is(.box_title,.box_title>span,.closed,.closedT){color:var(--udict-fg)!important;}
 </style>
 </head><body>${bodyHtml}
 <script>
@@ -264,6 +307,9 @@ window.addEventListener('message', function(e){
   } else if (e.data.type === 'udict-scroll-to') {
     var el = document.getElementById(e.data.id);
     if (el) el.scrollIntoView({behavior:'smooth', block:'start'});
+  } else if (e.data.type === 'udict-theme') {
+    document.documentElement.setAttribute('data-theme', e.data.theme);
+    var m = document.querySelector('meta[name="color-scheme"]'); if (m) m.setAttribute('content', e.data.theme);
   }
 });
 document.addEventListener('keydown', function(e){
@@ -301,20 +347,20 @@ document.addEventListener('keydown', function(e){
     iframe.sandbox = 'allow-scripts allow-same-origin allow-popups';
     results.appendChild(iframe);
     currentIframe = iframe;
-    const code = 'background:#F5F4EF;padding:1px 6px;border-radius:3px;font-size:13px;font-family:Consolas,monospace;';
-    const h3 = 'font-size:13px;text-transform:uppercase;letter-spacing:0.8px;color:#8E8C85;margin:24px 0 10px;font-weight:600;';
+    const code = 'background:var(--udict-panel);padding:1px 6px;border-radius:3px;font-size:13px;font-family:Consolas,monospace;';
+    const h3 = 'font-size:13px;text-transform:uppercase;letter-spacing:0.8px;color:var(--udict-muted);margin:24px 0 10px;font-weight:600;';
     const about = `
-      <div style="max-width:640px;margin:30px auto;padding:28px 32px;font-family:'Segoe UI',-apple-system,system-ui,'PingFang SC',sans-serif;color:#1F1E1D;">
+      <div style="max-width:640px;margin:30px auto;padding:28px 32px;font-family:'Segoe UI',-apple-system,system-ui,'PingFang SC',sans-serif;color:var(--udict-fg);">
         <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px;">
-          <svg viewBox="0 0 24 24" width="32" height="32" fill="#D97757"><path d="M12 2 L13.2 8.5 L19.5 6 L15 11.3 L22 12 L15 12.7 L19.5 18 L13.2 15.5 L12 22 L10.8 15.5 L4.5 18 L9 12.7 L2 12 L9 11.3 L4.5 6 L10.8 8.5 Z"/></svg>
+          <svg viewBox="0 0 24 24" width="32" height="32" fill="var(--udict-accent)"><path d="M12 2 L13.2 8.5 L19.5 6 L15 11.3 L22 12 L15 12.7 L19.5 18 L13.2 15.5 L12 22 L10.8 15.5 L4.5 18 L9 12.7 L2 12 L9 11.3 L4.5 6 L10.8 8.5 Z"/></svg>
           <h1 style="margin:0;font-size:24px;font-weight:600;">udict</h1>
-          <span style="background:#F5DCD0;color:#D97757;padding:2px 10px;border-radius:12px;font-size:12px;font-weight:600;">uTools plugin</span>
+          <span style="background:var(--udict-accent-soft);color:var(--udict-accent);padding:2px 10px;border-radius:12px;font-size:12px;font-weight:600;">uTools plugin</span>
         </div>
-        <p style="font-size:15px;line-height:1.7;color:#5C5B57;margin:0 0 18px;">
+        <p style="font-size:15px;line-height:1.7;color:var(--udict-soft);margin:0 0 18px;">
           一个离线 MDX/MDD 词典查询插件，内置生词本。所有查询均在本地运行，无需联网。
         </p>
         <h3 style="${h3}">特性</h3>
-        <ul style="margin:0;padding-left:20px;line-height:1.9;font-size:14px;color:#1F1E1D;">
+        <ul style="margin:0;padding-left:20px;line-height:1.9;font-size:14px;color:var(--udict-fg);">
           <li>直接解析本地 <code style="${code}">.mdx / .mdd</code>，自动发现 <code style="${code}">.1.mdd / .2.mdd</code> 分卷</li>
           <li>多词典同时查询，按来源分区展示；发音 / 图片 / 交叉引用全支持</li>
           <li>前缀建议 + 持久化 key 索引缓存，冷启动 0ms</li>
@@ -322,16 +368,16 @@ document.addEventListener('keydown', function(e){
           <li>可折叠侧栏：词典跳转、字号调节、历史记录、生词本</li>
         </ul>
         <h3 style="${h3}">致谢</h3>
-        <ul style="margin:0;padding-left:20px;line-height:1.9;font-size:14px;color:#1F1E1D;">
-          <li><b>js-mdict</b> — 纯 JS 的 MDX/MDD 解析器，查词引擎核心 <span style="color:#8E8C85;">· github.com/terasum/js-mdict</span></li>
-          <li><b>uTools</b> — 键盘优先的插件宿主 <span style="color:#8E8C85;">· u.tools</span></li>
+        <ul style="margin:0;padding-left:20px;line-height:1.9;font-size:14px;color:var(--udict-fg);">
+          <li><b>js-mdict</b> — 纯 JS 的 MDX/MDD 解析器，查词引擎核心 <span style="color:var(--udict-muted);">· github.com/terasum/js-mdict</span></li>
+          <li><b>uTools</b> — 键盘优先的插件宿主 <span style="color:var(--udict-muted);">· u.tools</span></li>
           <li>感谢 LDOCE、Oxford Advanced Learner's 等词典作者及 <code style="${code}">.mdx</code> 社区维护者</li>
         </ul>
         <h3 style="${h3}">项目地址</h3>
-        <p style="margin:0;font-size:14px;font-family:Consolas,'SF Mono',monospace;background:#F5F4EF;padding:10px 14px;border-radius:6px;user-select:all;color:#D97757;">
+        <p style="margin:0;font-size:14px;font-family:Consolas,'SF Mono',monospace;background:var(--udict-panel);padding:10px 14px;border-radius:6px;user-select:all;color:var(--udict-accent);">
           https://github.com/codefoxs/udict
         </p>
-        <p style="margin:28px 0 0;font-size:12px;color:#8E8C85;">
+        <p style="margin:28px 0 0;font-size:12px;color:var(--udict-muted);">
           由 CodeFox 和 Claude Code 共同编写 · MIT License</p>
       </div>`;
     iframe.srcdoc = wrapHtml(about, fontScale);

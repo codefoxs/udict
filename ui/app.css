@@ -15,10 +15,28 @@
   --shadow-lg: 0 6px 20px rgba(31,30,29,0.08);
   --radius: 8px;
   --radius-lg: 12px;
+  --scheme: light;
+}
+html[data-theme="dark"] {
+  --bg: #1F1E1D;
+  --surface: #2A2926;
+  --panel: #252421;
+  --border: #3A3835;
+  --border-strong: #4A4844;
+  --text: #EDEAE0;
+  --text-soft: #B5B1A5;
+  --text-muted: #7F7C73;
+  --accent: #E4A177;
+  --accent-soft: #4A3326;
+  --accent-hover: #F0B88C;
+  --danger: #D9664F;
+  --shadow: 0 2px 8px rgba(0,0,0,0.4);
+  --shadow-lg: 0 6px 20px rgba(0,0,0,0.5);
+  --scheme: dark;
 }
 
 * { box-sizing: border-box; }
-html, body { margin: 0; padding: 0; height: 100%; font-family: "Segoe UI", -apple-system, system-ui, "PingFang SC", "Microsoft YaHei", sans-serif; background: var(--bg); color: var(--text); color-scheme: light; }
+html, body { margin: 0; padding: 0; height: 100%; font-family: "Segoe UI", -apple-system, system-ui, "PingFang SC", "Microsoft YaHei", sans-serif; background: var(--bg); color: var(--text); color-scheme: var(--scheme); }
 body { display: flex; flex-direction: row; overflow: hidden; }
 
 /* ── Sidebar ─────────────────────────────────── */
@@ -45,6 +63,10 @@ body.side-collapsed #side-toggle { transform: rotate(180deg); }
 .font-ctrl { display: flex; align-items: center; gap: 6px; }
 .font-ctrl button { padding: 4px 8px; font-size: 12px; min-width: 32px; }
 .font-ctrl #font-val { flex: 1; text-align: center; font-size: 12px; color: var(--text-soft); font-variant-numeric: tabular-nums; }
+.theme-ctrl { display: flex; gap: 6px; }
+.theme-ctrl button { flex: 1; padding: 5px 0; font-size: 14px; line-height: 1; background: var(--surface); border: 1px solid var(--border); color: var(--text-soft); border-radius: var(--radius); cursor: pointer; transition: background 0.12s, color 0.12s, border-color 0.12s; }
+.theme-ctrl button:hover { background: var(--accent-soft); color: var(--accent); }
+.theme-ctrl button.active { background: var(--accent-soft); color: var(--accent); border-color: var(--accent); }
 
 .dict-jump { list-style: none; margin: 0; padding: 0; }
 .dict-jump li { padding: 7px 10px; border-radius: 6px; cursor: pointer; font-size: 13px; margin-bottom: 2px; transition: background 0.12s; }
