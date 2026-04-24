@@ -93,13 +93,29 @@
     } else if (e.key === 'ArrowUp') {
       e.preventDefault();
       if (currentSug.length) { activeIdx = (activeIdx - 1 + currentSug.length) % currentSug.length; renderSugActive(); }
-    } else if (e.key === 'Escape') {
-      e.preventDefault();
-      handleEscape();
     }
   });
 
+  const settingsView = document.getElementById('settings-view');
+  function showSettings() {
+    settingsView.hidden = false;
+    window.dispatchEvent(new CustomEvent('udict-settings-open'));
+  }
+  function hideSettings() {
+    settingsView.hidden = true;
+    qInput.focus();
+  }
+  document.getElementById('settings-link').addEventListener('click', e => {
+    e.preventDefault();
+    showSettings();
+  });
+  document.getElementById('settings-back').addEventListener('click', e => {
+    e.preventDefault();
+    hideSettings();
+  });
+
   function handleEscape() {
+    if (!settingsView.hidden) { hideSettings(); return; }
     if (currentSug.length) { hideSuggest(); return; }
     if (qInput.value.length) {
       qInput.value = '';
@@ -110,12 +126,12 @@
   }
 
   document.addEventListener('keydown', e => {
-    if (e.key === 'Escape' && document.activeElement !== qInput) {
-      e.preventDefault();
-      qInput.focus();
-      handleEscape();
-    }
-  });
+    if (e.key !== 'Escape') return;
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    if (!settingsView.hidden) { hideSettings(); return; }
+    handleEscape();
+  }, true);
 
   async function doSuggest() {
     const q = qInput.value.trim();

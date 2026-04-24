@@ -2,7 +2,7 @@
   "pluginName": "udict",
   "description": "Offline MDX/MDD dictionary lookup",
   "author": "udict",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "logo": "logo.png",
   "main": "ui/index.html",
   "preload": "preload.js",

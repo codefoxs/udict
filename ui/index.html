@@ -54,7 +54,7 @@
         <svg class="star-empty" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><polygon points="12,2.5 14.9,9 22,9.6 16.5,14.4 18.3,21.5 12,17.7 5.7,21.5 7.5,14.4 2,9.6 9.1,9"/></svg>
         <svg class="star-filled" viewBox="0 0 24 24" fill="#EABE5A" stroke="#D9A842" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true"><polygon points="12,2.5 14.9,9 22,9.6 16.5,14.4 18.3,21.5 12,17.7 5.7,21.5 7.5,14.4 2,9.6 9.1,9"/></svg>
       </button>
-      <a id="settings-link" href="settings.html" title="设置">
+      <a id="settings-link" href="#settings" title="设置">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <circle cx="12" cy="12" r="3"/>
           <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
@@ -96,6 +96,39 @@
       </div>
     </div>
   </main>
+  <section id="settings-view" hidden>
+    <div class="settings-bar">
+      <a href="#" class="back" id="settings-back">← 返回</a>
+      <h2>
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2 L13.2 8.5 L19.5 6 L15 11.3 L22 12 L15 12.7 L19.5 18 L13.2 15.5 L12 22 L10.8 15.5 L4.5 18 L9 12.7 L2 12 L9 11.3 L4.5 6 L10.8 8.5 Z"/></svg>
+        udict 设置
+      </h2>
+    </div>
+    <div class="settings-body">
+      <section>
+        <div class="sec-head">
+          <h3>Dictionaries</h3>
+          <button id="btn-pick">Pick directory...</button>
+        </div>
+        <ul id="dict-list" class="dict-list"></ul>
+      </section>
+      <section id="scan-section" style="display:none">
+        <div class="sec-head">
+          <h3>Files in <code id="scan-dir"></code></h3>
+        </div>
+        <p class="hint">Click any .mdx file to add it.</p>
+        <ul id="scan-list" class="scan-list"></ul>
+      </section>
+      <section>
+        <div class="sec-head">
+          <h3>Cache</h3>
+          <button id="btn-clear-cache" class="danger">Clear cache</button>
+        </div>
+        <div id="cache-info" class="cache-info">Loading...</div>
+      </section>
+    </div>
+  </section>
   <script src="app.js"></script>
+  <script src="settings.js"></script>
 </body>
 </html>

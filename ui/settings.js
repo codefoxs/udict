@@ -148,10 +148,9 @@
     loadCache();
   });
 
-  document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') { e.preventDefault(); location.href = 'index.html'; }
-  });
-
-  loadConfig();
-  loadCache();
+  window.addEventListener('udict-settings-open', () => { loadConfig(); loadCache(); });
+  // Initial load in case settings view is already visible
+  if (document.getElementById('settings-view') && !document.getElementById('settings-view').hidden) {
+    loadConfig(); loadCache();
+  }
 })();
