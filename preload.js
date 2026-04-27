@@ -1,9 +1,9 @@
+const fs = require('fs');
 const path = require('path');
-const { createApp } = require('./src/server');
+const { DictManager } = require('./src/dict');
+const cache = require('./src/cache');
 
-const PORT = 7219;
 const STORE_KEY = 'udict.config';
-const uiDir = path.join(__dirname, 'ui');
 
 const storage = {
   load() {
@@ -23,32 +23,13 @@ const storage = {
   }
 };
 
-let app = null;
 let mgr = null;
-
-function start() {
-  if (app) return;
-  try {
-    app = createApp(storage, uiDir);
-    mgr = app.manager;
-    app.on('error', err => {
-      if (err.code === 'EADDRINUSE') {
-        console.warn('[udict] port in use, reusing external instance');
-        app = null;
-      } else {
-        console.error('[udict] server error:', err);
-      }
-    });
-    app.listen(PORT, '127.0.0.1');
-  } catch (e) {
-    console.error('[udict] preload start failed:', e);
-  }
+function ensure() {
+  if (!mgr) mgr = new DictManager(storage);
+  return mgr;
 }
 
-start();
-
 window.udict = {
-  base: `http://127.0.0.1:${PORT}`,
   onEnter(cb) {
     if (window.utools && window.utools.onPluginEnter) {
       window.utools.onPluginEnter(({ payload }) => {
@@ -63,6 +44,10 @@ window.udict = {
     try { window.utools && window.utools.outPlugin && window.utools.outPlugin(); }
     catch {}
   },
+  isDark() {
+    try { return !!(window.utools && window.utools.isDarkColors && window.utools.isDarkColors()); }
+    catch { return false; }
+  },
   pickDirectory() {
     if (!window.utools || !window.utools.showOpenDialog) return null;
     const r = window.utools.showOpenDialog({
@@ -70,6 +55,36 @@ window.udict = {
       properties: ['openDirectory']
     });
     return Array.isArray(r) && r.length ? r[0] : null;
-  }
+  },
+  async lookup(word) {
+    return await ensure().lookup(word);
+  },
+  async prefix(word, limit = 20) {
+    return await ensure().prefix(word, limit);
+  },
+  config() {
+    const m = ensure();
+    return { config: m.getConfig(), status: m.status() };
+  },
+  saveConfig(dictionaries) {
+    const m = ensure();
+    m.saveConfig(dictionaries);
+    return { status: m.status() };
+  },
+  scan(dir) {
+    if (!dir || !fs.existsSync(dir)) throw new Error('path not found');
+    const entries = fs.readdirSync(dir, { withFileTypes: true });
+    const files = entries.filter(e => e.isFile()).map(e => {
+      const fp = path.join(dir, e.name);
+      let size = 0;
+      try { size = fs.statSync(fp).size; } catch {}
+      return { name: e.name, path: fp, size, ext: path.extname(e.name).toLowerCase() };
+    });
+    return { dir, files, mdxs: files.filter(f => f.ext === '.mdx') };
+  },
+  async getSound(dictName, key) {
+    return await ensure().getResourceDataUri(dictName, key);
+  },
+  cacheStats() { return cache.stats(); },
+  clearCache() { return cache.clearAll(); }
 };
-

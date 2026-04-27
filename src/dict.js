@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const { MDX, MDD } = require('js-mdict');
 const cache = require('./cache');
+const { inlineEntry, mimeOf } = require('./resolver');
 
 function extractAllKeys(mdx) {
   const out = [];
@@ -154,10 +155,19 @@ class DictManager {
     const out = [];
     for (const d of this.dicts) {
       for (const entry of await d.lookup(word)) {
-        out.push({ dict: d.name, keyText: entry.keyText, html: entry.definition });
+        const html = await inlineEntry(entry.definition, d);
+        out.push({ dict: d.name, keyText: entry.keyText, html });
       }
     }
     return out;
+  }
+
+  async getResourceDataUri(dictName, resKey) {
+    const d = this.dicts.find(x => x.name === dictName) || this.dicts[0];
+    if (!d) return null;
+    const buf = await d.getResource(resKey);
+    if (!buf) return null;
+    return `data:${mimeOf(resKey)};base64,${buf.toString('base64')}`;
   }
 
   async prefix(word, limit = 20) {

@@ -2,7 +2,6 @@ const http = require('http');
 const path = require('path');
 const fs = require('fs');
 const { DictManager } = require('./dict');
-const { rewriteHtml } = require('./resolver');
 const cache = require('./cache');
 
 const MIME = {
@@ -82,11 +81,7 @@ function createApp(storage, uiDir) {
 
       if (p === '/api/lookup') {
         const word = url.searchParams.get('q') || '';
-        const resBase = `${url.protocol}//${req.headers.host}/res`;
-        const results = (await mgr.lookup(word)).map(r => ({
-          dict: r.dict, keyText: r.keyText,
-          html: rewriteHtml(r.html, r.dict, resBase)
-        }));
+        const results = await mgr.lookup(word);
         return json(res, 200, { results });
       }
 
@@ -129,23 +124,6 @@ function createApp(storage, uiDir) {
       if (p === '/api/cache' && req.method === 'DELETE') {
         const r = cache.clearAll();
         return json(res, 200, { ok: true, ...r, stats: cache.stats() });
-      }
-
-      if (p.startsWith('/res/')) {
-        const rest = p.slice('/res/'.length);
-        const slash = rest.indexOf('/');
-        if (slash < 0) return notFound(res);
-        const dictName = decodeURIComponent(rest.slice(0, slash));
-        const key = decodeURIComponent(rest.slice(slash + 1));
-        const buf = await mgr.getResource(dictName, key);
-        if (!buf) return notFound(res);
-        const mime = mimeOf(key);
-        let out = buf;
-        if (mime === 'text/css') {
-          out = Buffer.from(stripDarkMedia(buf.toString('utf8')), 'utf8');
-        }
-        res.writeHead(200, { 'Content-Type': mime, 'Cache-Control': 'public, max-age=3600' });
-        return res.end(out);
       }
 
       notFound(res);

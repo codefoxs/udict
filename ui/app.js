@@ -1,5 +1,4 @@
 (function () {
-  const BASE = (window.udict && window.udict.base) || '';
   const qInput = document.getElementById('q');
   const sugList = document.getElementById('suggest');
   const results = document.getElementById('results');
@@ -172,8 +171,7 @@
   async function doSuggest() {
     const q = qInput.value.trim();
     if (!q) return hideSuggest();
-    const r = await fetch(BASE + '/api/prefix?q=' + encodeURIComponent(q));
-    const { words } = await r.json();
+    const words = await window.udict.prefix(q, 20);
     currentSug = words || [];
     activeIdx = -1;
     if (!currentSug.length) return hideSuggest();
@@ -203,8 +201,8 @@
     if (!word) return;
     if (word.trim().toLowerCase() === 'udict') return showAbout();
     results.innerHTML = '<div class="empty">Looking up...</div>';
-    const r = await fetch(BASE + '/api/lookup?q=' + encodeURIComponent(word));
-    const data = await r.json();
+    const lookupResults = await window.udict.lookup(word);
+    const data = { results: lookupResults };
     if (!data.results || !data.results.length) {
       results.innerHTML = '<div class="empty">No results for "' + escapeHtml(word) + '"</div>';
       return;
@@ -227,7 +225,7 @@
     const parts = data.results.map((r, i) =>
       `<section class="udict-entry" id="udict-sec-${i}" data-dict="${escapeHtml(r.dict)}">
          <header class="udict-entry-head">【${escapeHtml(r.dict)}】${escapeHtml(r.keyText)}</header>
-         <div class="udict-entry-body">${stripDarkMedia(r.html)}</div>
+         <div class="udict-entry-body">${r.html}</div>
        </section>`
     ).join('<hr class="udict-sep"/>');
     iframe.srcdoc = wrapHtml(parts, fontScale);
@@ -247,26 +245,9 @@
     });
   }
 
-  function stripDarkMedia(css) {
-    let out = '', i = 0;
-    while (i < css.length) {
-      const m = css.slice(i).match(/@media[^{]*prefers-color-scheme\s*:\s*dark[^{]*\{/i);
-      if (!m) { out += css.slice(i); break; }
-      out += css.slice(i, i + m.index);
-      let depth = 1, j = i + m.index + m[0].length;
-      while (j < css.length && depth > 0) {
-        const c = css[j++];
-        if (c === '{') depth++;
-        else if (c === '}') depth--;
-      }
-      i = j;
-    }
-    return out;
-  }
-
   function wrapHtml(bodyHtml, scale) {
     const theme = activeTheme;
-    return `<!doctype html><html data-theme="${theme}"><head><meta charset="utf-8"/><meta name="color-scheme" content="${theme}"/><base href="${BASE}/"/>
+    return `<!doctype html><html data-theme="${theme}"><head><meta charset="utf-8"/><meta name="color-scheme" content="${theme}"/>
 <style>
   :root{color-scheme:${theme};--udict-bg:#fff;--udict-fg:#1F1E1D;--udict-soft:#5C5B57;--udict-muted:#8E8C85;--udict-accent:#D97757;--udict-accent-soft:#F5DCD0;--udict-border:#E8E6DC;--udict-sep:#D9D6CB;--udict-panel:#F5F4EF;}
   html[data-theme="dark"]{--udict-bg:#1F1E1D;--udict-fg:#EDEAE0;--udict-soft:#B5B1A5;--udict-muted:#7F7C73;--udict-accent:#E4A177;--udict-accent-soft:#4A3326;--udict-border:#3A3835;--udict-sep:#4A4844;--udict-panel:#252421;}
@@ -284,12 +265,19 @@
 </style>
 </head><body>${bodyHtml}
 <script>
+function findDict(node){
+  while (node && node !== document.body) {
+    if (node.dataset && node.dataset.dict) return node.dataset.dict;
+    node = node.parentNode;
+  }
+  return '';
+}
 document.addEventListener('click', function(e){
   var t = e.target;
   while (t && t !== document.body) {
     if (t.dataset && t.dataset.udictSound) {
       e.preventDefault();
-      try { new Audio(t.dataset.udictSound).play(); } catch(err){}
+      parent.postMessage({type:'udict-sound', dict:findDict(t), key:t.dataset.udictSound}, '*');
       return;
     }
     if (t.dataset && t.dataset.udictEntry) {
@@ -323,7 +311,7 @@ document.addEventListener('keydown', function(e){
 
   function hookEntryClicks() { /* handled via postMessage */ }
 
-  window.addEventListener('message', e => {
+  window.addEventListener('message', async e => {
     if (!e.data) return;
     if (e.data.type === 'udict-entry' || e.data.type === 'udict-query') {
       const w = e.data.word || '';
@@ -333,6 +321,11 @@ document.addEventListener('keydown', function(e){
     } else if (e.data.type === 'udict-escape') {
       qInput.focus();
       handleEscape();
+    } else if (e.data.type === 'udict-sound') {
+      try {
+        const uri = await window.udict.getSound(e.data.dict, e.data.key);
+        if (uri) new Audio(uri).play().catch(() => {});
+      } catch (err) { console.warn('[udict] sound load failed:', err); }
     }
   });
 

@@ -1,5 +1,4 @@
 (function () {
-  const BASE = (window.udict && window.udict.base) || '';
   const dictList = document.getElementById('dict-list');
   const scanSection = document.getElementById('scan-section');
   const scanDir = document.getElementById('scan-dir');
@@ -16,9 +15,8 @@
 
   let currentDicts = [];
 
-  async function loadConfig() {
-    const r = await fetch(BASE + '/api/config');
-    const { config, status } = await r.json();
+  function loadConfig() {
+    const { config, status } = window.udict.config();
     currentDicts = config.dictionaries || [];
     renderDicts(status);
   }
@@ -54,7 +52,7 @@
       li.addEventListener('dragend', () => li.classList.remove('dragging'));
       li.addEventListener('dragover', e => { e.preventDefault(); li.classList.add('drag-over'); });
       li.addEventListener('dragleave', () => li.classList.remove('drag-over'));
-      li.addEventListener('drop', async e => {
+      li.addEventListener('drop', e => {
         e.preventDefault();
         li.classList.remove('drag-over');
         const src = +e.dataTransfer.getData('text/plain');
@@ -62,32 +60,26 @@
         if (isNaN(src) || src === dst) return;
         const [m] = currentDicts.splice(src, 1);
         currentDicts.splice(dst, 0, m);
-        await saveDicts();
+        saveDicts();
       });
     });
   }
 
-
-  async function saveDicts() {
-    const r = await fetch(BASE + '/api/config', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ dictionaries: currentDicts })
-    });
-    const j = await r.json();
-    renderDicts(j.status || []);
+  function saveDicts() {
+    const { status } = window.udict.saveConfig(currentDicts);
+    renderDicts(status || []);
   }
 
-  async function removeDict(idx) {
+  function removeDict(idx) {
     currentDicts.splice(idx, 1);
-    await saveDicts();
+    saveDicts();
   }
 
-  async function addDict(mdxPath) {
+  function addDict(mdxPath) {
     const name = mdxPath.split(/[\\/]/).pop().replace(/\.mdx$/i, '');
     if (currentDicts.find(d => d.mdx === mdxPath)) return;
     currentDicts.push({ name, mdx: mdxPath });
-    await saveDicts();
+    saveDicts();
   }
 
   document.getElementById('btn-pick').addEventListener('click', () => {
@@ -99,14 +91,11 @@
     }
   });
 
-  async function scanDirectory(dir) {
-    const r = await fetch(BASE + '/api/scan?path=' + encodeURIComponent(dir));
-    if (!r.ok) {
-      const j = await r.json().catch(() => ({}));
-      alert('Scan failed: ' + (j.error || r.status));
-      return;
-    }
-    const { files, mdxs } = await r.json();
+  function scanDirectory(dir) {
+    let r;
+    try { r = window.udict.scan(dir); }
+    catch (e) { alert('Scan failed: ' + e.message); return; }
+    const { files, mdxs } = r;
     scanSection.style.display = '';
     scanDir.textContent = dir;
     scanList.innerHTML = files.slice(0, 200).map(f => {
@@ -123,7 +112,6 @@
       scanList.insertAdjacentHTML('afterbegin', '<li class="empty">No .mdx files in this directory.</li>');
       return;
     }
-    // Auto-add any mdx files not already configured
     let added = 0;
     for (const m of mdxs) {
       if (!currentDicts.find(d => d.mdx === m.path)) {
@@ -132,24 +120,22 @@
         added++;
       }
     }
-    if (added) await saveDicts();
+    if (added) saveDicts();
   }
 
-  async function loadCache() {
-    const r = await fetch(BASE + '/api/cache');
-    const s = await r.json();
+  function loadCache() {
+    const s = window.udict.cacheStats();
     cacheInfo.innerHTML = `<div><strong>Dir:</strong> <code>${esc(s.dir)}</code></div>
       <div><strong>Files:</strong> ${s.files} · <strong>Size:</strong> ${fmtBytes(s.bytes)}</div>`;
   }
 
-  document.getElementById('btn-clear-cache').addEventListener('click', async () => {
+  document.getElementById('btn-clear-cache').addEventListener('click', () => {
     if (!confirm('Clear udict cache?')) return;
-    await fetch(BASE + '/api/cache', { method: 'DELETE' });
+    window.udict.clearCache();
     loadCache();
   });
 
   window.addEventListener('udict-settings-open', () => { loadConfig(); loadCache(); });
-  // Initial load in case settings view is already visible
   if (document.getElementById('settings-view') && !document.getElementById('settings-view').hidden) {
     loadConfig(); loadCache();
   }
