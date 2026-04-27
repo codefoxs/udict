@@ -128,26 +128,26 @@ class Dictionary {
 }
 
 class DictManager {
-  constructor(configPath) {
-    this.configPath = configPath;
+  constructor(storage) {
+    this.storage = storage;
     this.reload();
   }
 
   reload() {
-    const cfg = JSON.parse(fs.readFileSync(this.configPath, 'utf8'));
-    this.dicts = (cfg.dictionaries || [])
+    const cfg = this.storage.load() || {};
+    this.cfg = { dictionaries: cfg.dictionaries || [] };
+    this.dicts = this.cfg.dictionaries
       .filter(d => d && d.mdx && fs.existsSync(d.mdx))
       .map(d => new Dictionary(d));
   }
 
   saveConfig(dictionaries) {
-    const cfg = { dictionaries };
-    fs.writeFileSync(this.configPath, JSON.stringify(cfg, null, 2), 'utf8');
+    this.storage.save({ dictionaries });
     this.reload();
   }
 
   getConfig() {
-    return JSON.parse(fs.readFileSync(this.configPath, 'utf8'));
+    return this.cfg;
   }
 
   async lookup(word) {

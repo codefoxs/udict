@@ -2,8 +2,26 @@ const path = require('path');
 const { createApp } = require('./src/server');
 
 const PORT = 7219;
-const configPath = path.join(__dirname, 'config.json');
+const STORE_KEY = 'udict.config';
 const uiDir = path.join(__dirname, 'ui');
+
+const storage = {
+  load() {
+    try {
+      if (window.utools && window.utools.dbStorage) {
+        return window.utools.dbStorage.getItem(STORE_KEY) || { dictionaries: [] };
+      }
+    } catch {}
+    return { dictionaries: [] };
+  },
+  save(cfg) {
+    try {
+      if (window.utools && window.utools.dbStorage) {
+        window.utools.dbStorage.setItem(STORE_KEY, cfg);
+      }
+    } catch (e) { console.error('[udict] save config failed:', e); }
+  }
+};
 
 let app = null;
 let mgr = null;
@@ -11,7 +29,7 @@ let mgr = null;
 function start() {
   if (app) return;
   try {
-    app = createApp(configPath, uiDir);
+    app = createApp(storage, uiDir);
     mgr = app.manager;
     app.on('error', err => {
       if (err.code === 'EADDRINUSE') {

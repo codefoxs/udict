@@ -66,8 +66,8 @@ function sendFile(res, fp) {
   });
 }
 
-function createApp(configPath, uiDir) {
-  const mgr = new DictManager(configPath);
+function createApp(storage, uiDir) {
+  const mgr = new DictManager(storage);
 
   const app = http.createServer(async (req, res) => {
     try {
@@ -164,8 +164,16 @@ module.exports = { createApp };
 
 if (require.main === module) {
   const port = Number(process.env.PORT) || 7219;
+  const cfgPath = path.join(__dirname, '..', 'config.json');
+  const storage = {
+    load: () => {
+      try { return JSON.parse(fs.readFileSync(cfgPath, 'utf8')); }
+      catch { return { dictionaries: [] }; }
+    },
+    save: (cfg) => fs.writeFileSync(cfgPath, JSON.stringify(cfg, null, 2), 'utf8')
+  };
   const app = createApp(
-    path.join(__dirname, '..', 'config.json'),
+    storage,
     path.join(__dirname, '..', 'ui')
   );
   app.listen(port, '127.0.0.1', () => {
