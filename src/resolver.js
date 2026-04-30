@@ -50,12 +50,23 @@ async function asyncReplace(str, regex, fn) {
   return out;
 }
 
-async function dataUri(refUrl, dict) {
-  if (!refUrl) return null;
+function dataUri(refUrl, dict) {
+  if (!refUrl) return Promise.resolve(null);
   const clean = refUrl.split(/[?#]/)[0];
-  const buf = await dict.getResource(clean);
-  if (!buf) return null;
-  return `data:${mimeOf(clean)};base64,${buf.toString('base64')}`;
+  if (dict.getCachedResUri) {
+    const hit = dict.getCachedResUri(clean);
+    if (hit !== undefined) return Promise.resolve(hit);
+  }
+  const p = (async () => {
+    if (dict.getResourceB64) {
+      const b64 = await dict.getResourceB64(clean);
+      return b64 ? `data:${mimeOf(clean)};base64,${b64}` : null;
+    }
+    const buf = await dict.getResource(clean);
+    return buf ? `data:${mimeOf(clean)};base64,${buf.toString('base64')}` : null;
+  })();
+  if (dict.setCachedResUri) dict.setCachedResUri(clean, p);
+  return p;
 }
 
 async function inlineCss(cssText, dict) {
@@ -81,9 +92,18 @@ async function inlineEntry(html, dict) {
       const m = /\bhref\s*=\s*["']([^"']+)["']/i.exec(tag);
       if (!m) return tag;
       if (/^(https?:|data:)/i.test(m[1])) return '';
-      const buf = await dict.getResource(m[1].split(/[?#]/)[0]);
-      if (!buf) return '';
-      const css = await inlineCss(buf.toString('utf8'), dict);
+      const key = m[1].split(/[?#]/)[0];
+      let cssPromise = dict.getCachedInlinedCss && dict.getCachedInlinedCss(key);
+      if (cssPromise === undefined) {
+        cssPromise = (async () => {
+          const buf = await dict.getResource(key);
+          if (!buf) return '';
+          return await inlineCss(buf.toString('utf8'), dict);
+        })();
+        if (dict.setCachedInlinedCss) dict.setCachedInlinedCss(key, cssPromise);
+      }
+      const css = await cssPromise;
+      if (!css) return '';
       return `<style>${css}</style>`;
     });
 

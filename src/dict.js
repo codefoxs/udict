@@ -27,6 +27,18 @@ function prefixScan(sortedKeys, word, limit) {
   return out;
 }
 
+const RES_CACHE_MAX = 200;
+const CSS_CACHE_MAX = 64;
+
+function lruSet(map, key, value, max) {
+  if (map.has(key)) map.delete(key);
+  map.set(key, value);
+  if (map.size > max) {
+    const first = map.keys().next().value;
+    map.delete(first);
+  }
+}
+
 class Dictionary {
   constructor({ name, mdx }) {
     this.name = name;
@@ -36,11 +48,19 @@ class Dictionary {
     this.mdds = null;
     this._loading = null;
 
+    this._resCache = new Map();
+    this._cssCache = new Map();
+
     this.cachedKeys = cache.loadKeys(mdx);
     this.cachedKeysSorted = this.cachedKeys
       ? [...this.cachedKeys].sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()))
       : null;
   }
+
+  getCachedResUri(key) { return this._resCache.get(key); }
+  setCachedResUri(key, uri) { lruSet(this._resCache, key, uri, RES_CACHE_MAX); }
+  getCachedInlinedCss(key) { return this._cssCache.get(key); }
+  setCachedInlinedCss(key, css) { lruSet(this._cssCache, key, css, CSS_CACHE_MAX); }
 
   async ensureLoaded() {
     if (this.mdx) return;
@@ -81,14 +101,30 @@ class Dictionary {
   async lookup(word, depth = 0) {
     if (depth > 5) return [];
     await this.ensureLoaded();
-    const results = this.mdx.lookupAll(word).filter(r => r.definition);
+    let results = this.mdx.lookupAll(word).filter(r => r.definition);
+    if (!results.length && depth === 0 && this.cachedKeys) {
+      const lower = word.toLowerCase();
+      const tried = new Set([word]);
+      for (const k of this.cachedKeys) {
+        if (tried.has(k)) continue;
+        if (k.toLowerCase() !== lower) continue;
+        tried.add(k);
+        const r = this.mdx.lookupAll(k).filter(x => x.definition);
+        for (const item of r) results.push(item);
+      }
+    }
     const out = [];
+    const seen = new Set();
     for (const r of results) {
       const m = /^@@@LINK=([^\r\n]+)/.exec(r.definition.trim());
       if (m) {
-        for (const sub of await this.lookup(m[1].trim(), depth + 1)) out.push(sub);
+        for (const sub of await this.lookup(m[1].trim(), depth + 1)) {
+          const sig = sub.keyText + '\0' + sub.definition.length;
+          if (!seen.has(sig)) { seen.add(sig); out.push(sub); }
+        }
       } else {
-        out.push(r);
+        const sig = r.keyText + '\0' + r.definition.length;
+        if (!seen.has(sig)) { seen.add(sig); out.push(r); }
       }
     }
     return out;
@@ -126,11 +162,31 @@ class Dictionary {
     } catch {}
     return null;
   }
+
+  async getResourceB64(resKey) {
+    await this.ensureLoaded();
+    if (this.mdds) {
+      for (const mdd of this.mdds) {
+        const r = mdd.locate(resKey);
+        if (r && r.definition) return r.definition;
+      }
+    }
+    const candidate = path.join(this.baseDir, resKey.replace(/^[\\/]+/, '').replace(/\\/g, '/'));
+    try {
+      if (fs.existsSync(candidate) && fs.statSync(candidate).isFile()) {
+        return fs.readFileSync(candidate).toString('base64');
+      }
+    } catch {}
+    return null;
+  }
 }
+
+const ENTRY_CACHE_MAX = 200;
 
 class DictManager {
   constructor(storage) {
     this.storage = storage;
+    this._entryCache = new Map();
     this.reload();
   }
 
@@ -140,6 +196,13 @@ class DictManager {
     this.dicts = this.cfg.dictionaries
       .filter(d => d && d.mdx && fs.existsSync(d.mdx))
       .map(d => new Dictionary(d));
+    this._entryCache.clear();
+  }
+
+  async warmup() {
+    await Promise.all(this.dicts.map(d => d.ensureLoaded().catch(e => {
+      console.error('[udict] warmup failed for', d.name, e.message);
+    })));
   }
 
   saveConfig(dictionaries) {
@@ -152,14 +215,23 @@ class DictManager {
   }
 
   async lookup(word) {
-    const out = [];
-    for (const d of this.dicts) {
-      for (const entry of await d.lookup(word)) {
-        const html = await inlineEntry(entry.definition, d);
-        out.push({ dict: d.name, keyText: entry.keyText, html });
-      }
-    }
-    return out;
+    const perDict = await Promise.all(this.dicts.map(async d => {
+      const entries = await d.lookup(word);
+      const items = await Promise.all(entries.map(async entry => {
+        const cacheKey = d.name + '\0' + entry.keyText + '\0' + entry.definition.length;
+        let html = this._entryCache.get(cacheKey);
+        if (html === undefined) {
+          html = await inlineEntry(entry.definition, d);
+          lruSet(this._entryCache, cacheKey, html, ENTRY_CACHE_MAX);
+        } else {
+          this._entryCache.delete(cacheKey);
+          this._entryCache.set(cacheKey, html);
+        }
+        return { dict: d.name, keyText: entry.keyText, html };
+      }));
+      return items;
+    }));
+    return perDict.flat();
   }
 
   async getResourceDataUri(dictName, resKey) {

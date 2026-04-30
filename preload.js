@@ -4,6 +4,7 @@ const { DictManager } = require('./src/dict');
 const cache = require('./src/cache');
 
 const STORE_KEY = 'udict.config';
+const PREF_PREFIX = 'udict.pref.';
 
 const storage = {
   load() {
@@ -27,6 +28,21 @@ let mgr = null;
 function ensure() {
   if (!mgr) mgr = new DictManager(storage);
   return mgr;
+}
+
+function prewarm() {
+  try {
+    const m = ensure();
+    Promise.resolve().then(() => m.warmup()).catch(() => {});
+  } catch (e) { console.error('[udict] prewarm failed:', e); }
+}
+
+if (typeof window !== 'undefined') {
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', prewarm, { once: true });
+  } else {
+    prewarm();
+  }
 }
 
 window.udict = {
@@ -86,5 +102,22 @@ window.udict = {
     return await ensure().getResourceDataUri(dictName, key);
   },
   cacheStats() { return cache.stats(); },
-  clearCache() { return cache.clearAll(); }
+  clearCache() { return cache.clearAll(); },
+  getPref(key, def) {
+    try {
+      if (window.utools && window.utools.dbStorage) {
+        const v = window.utools.dbStorage.getItem(PREF_PREFIX + key);
+        return v == null ? def : v;
+      }
+    } catch {}
+    return def;
+  },
+  setPref(key, val) {
+    try {
+      if (window.utools && window.utools.dbStorage) {
+        if (val == null) window.utools.dbStorage.removeItem(PREF_PREFIX + key);
+        else window.utools.dbStorage.setItem(PREF_PREFIX + key, val);
+      }
+    } catch (e) { console.error('[udict] setPref failed:', e); }
+  }
 };

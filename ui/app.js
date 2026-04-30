@@ -11,10 +11,31 @@
   let currentSug = [];
   let currentIframe = null;
   let currentWord = '';
-  let fontScale = Number(localStorage.getItem('udict.fontScale')) || 100;
+
+  const getPref = (window.udict && window.udict.getPref) ? window.udict.getPref : (k, d) => d;
+  const setPref = (window.udict && window.udict.setPref) ? window.udict.setPref : () => {};
+  // one-time migrate from legacy localStorage
+  const SCALAR_KEYS = ['fontScale', 'theme', 'sideCollapsed'];
+  const JSON_KEYS = ['wordbooks', 'words', 'history'];
+  SCALAR_KEYS.forEach(k => {
+    if (getPref(k, undefined) === undefined) {
+      const v = localStorage.getItem('udict.' + k);
+      if (v != null) { setPref(k, v); localStorage.removeItem('udict.' + k); }
+    }
+  });
+  JSON_KEYS.forEach(k => {
+    if (getPref(k, undefined) === undefined) {
+      const raw = localStorage.getItem('udict.' + k);
+      if (raw != null) {
+        try { setPref(k, JSON.parse(raw)); localStorage.removeItem('udict.' + k); } catch {}
+      }
+    }
+  });
+
+  let fontScale = Number(getPref('fontScale', 100)) || 100;
 
   // ── Theme ────────────────────────────────────
-  let themeMode = localStorage.getItem('udict.theme') || 'system';
+  let themeMode = getPref('theme', 'system');
   const darkMql = window.matchMedia('(prefers-color-scheme: dark)');
   function resolveTheme() {
     if (themeMode === 'dark') return 'dark';
@@ -37,21 +58,21 @@
   }
   function setThemeMode(mode) {
     themeMode = mode;
-    localStorage.setItem('udict.theme', mode);
+    setPref('theme', mode);
     applyTheme();
   }
   darkMql.addEventListener('change', () => { if (themeMode === 'system') applyTheme(); });
 
   // ── Wordbook data ────────────────────────────
   const DEFAULT_BOOK_ID = 'default';
-  let wordbooks = [];
-  let words = {};
-  try { wordbooks = JSON.parse(localStorage.getItem('udict.wordbooks') || 'null') || []; } catch {}
-  try { words = JSON.parse(localStorage.getItem('udict.words') || '{}'); } catch {}
-  if (!Array.isArray(wordbooks) || !wordbooks.length) wordbooks = [{ id: DEFAULT_BOOK_ID, name: '默认生词本' }];
+  let wordbooks = getPref('wordbooks', null);
+  let words = getPref('words', null);
+  if (!Array.isArray(wordbooks)) wordbooks = [];
+  if (!words || typeof words !== 'object') words = {};
+  if (!wordbooks.length) wordbooks = [{ id: DEFAULT_BOOK_ID, name: '默认生词本' }];
   if (!wordbooks.some(b => b.id === DEFAULT_BOOK_ID)) wordbooks.unshift({ id: DEFAULT_BOOK_ID, name: '默认生词本' });
-  function saveBooks() { localStorage.setItem('udict.wordbooks', JSON.stringify(wordbooks)); }
-  function saveWords() { localStorage.setItem('udict.words', JSON.stringify(words)); }
+  function saveBooks() { setPref('wordbooks', wordbooks); }
+  function saveWords() { setPref('words', words); }
   function wordsInBook(bookId) {
     const entries = Object.entries(words).filter(([w, m]) => m && Array.isArray(m.books) && m.books.length);
     if (bookId === DEFAULT_BOOK_ID) return entries;
@@ -59,8 +80,8 @@
   }
   function isCollected(w) { return !!(w && words[w] && words[w].books && words[w].books.length); }
   const historyEl = document.getElementById('history');
-  let history = [];
-  try { history = JSON.parse(localStorage.getItem('udict.history') || '[]'); } catch {}
+  let history = getPref('history', null);
+  if (!Array.isArray(history)) history = [];
 
   function renderHistory() {
     if (!history.length) { historyEl.innerHTML = '<li class="muted">（暂无）</li>'; return; }
@@ -74,26 +95,26 @@
   function pushHistory(w) {
     w = w.trim(); if (!w) return;
     history = [w, ...history.filter(x => x !== w)].slice(0, 50);
-    localStorage.setItem('udict.history', JSON.stringify(history));
+    setPref('history', history);
     renderHistory();
   }
   document.getElementById('hist-clear').addEventListener('click', e => {
     e.stopPropagation();
-    history = []; localStorage.removeItem('udict.history'); renderHistory();
+    history = []; setPref('history', null); renderHistory();
   });
   renderHistory();
 
   // Sidebar toggle
-  if (localStorage.getItem('udict.sideCollapsed') === '1') document.body.classList.add('side-collapsed');
+  if (String(getPref('sideCollapsed', '0')) === '1') document.body.classList.add('side-collapsed');
   sideToggle.addEventListener('click', () => {
     document.body.classList.toggle('side-collapsed');
-    localStorage.setItem('udict.sideCollapsed', document.body.classList.contains('side-collapsed') ? '1' : '0');
+    setPref('sideCollapsed', document.body.classList.contains('side-collapsed') ? '1' : '0');
   });
 
   // Font scale
   function applyFont() {
     fontVal.textContent = fontScale + '%';
-    localStorage.setItem('udict.fontScale', String(fontScale));
+    setPref('fontScale', String(fontScale));
     if (currentIframe && currentIframe.contentWindow) {
       currentIframe.contentWindow.postMessage({ type: 'udict-font-scale', scale: fontScale }, '*');
     }
