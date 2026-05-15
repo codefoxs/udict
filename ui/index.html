@@ -87,6 +87,22 @@
         </div>
       </div>
     </div>
+    <div id="transfer-modal" class="modal" hidden>
+      <div class="modal-card">
+        <div class="modal-head">
+          <span class="modal-title">转移到生词本</span>
+          <button class="modal-close" id="transfer-close" title="关闭">✕</button>
+        </div>
+        <div class="modal-body">
+          <div class="modal-word" id="transfer-info"></div>
+          <ul id="transfer-books" class="collect-books"></ul>
+        </div>
+        <div class="modal-foot">
+          <button id="transfer-cancel">取消</button>
+          <button id="transfer-confirm" class="primary">确认</button>
+        </div>
+      </div>
+    </div>
     <div id="collect-modal" class="modal" hidden>
       <div class="modal-card">
         <div class="modal-head">
@@ -126,6 +142,16 @@
         </div>
         <p class="hint">Click any .mdx file to add it.</p>
         <ul id="scan-list" class="scan-list"></ul>
+      </section>
+      <section>
+        <div class="sec-head">
+          <h3>Preferences</h3>
+        </div>
+        <div class="pref-row">
+          <label for="pref-hist-max">最大历史记录条数</label>
+          <input id="pref-hist-max" type="number" min="1" max="1000" step="1"/>
+          <span class="hint" style="margin:0">默认 50</span>
+        </div>
       </section>
       <section>
         <div class="sec-head">

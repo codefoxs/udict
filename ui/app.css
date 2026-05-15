@@ -175,6 +175,25 @@ body.side-collapsed #side-toggle { transform: rotate(180deg); }
 .wb-stars span { font-size: 16px; color: #D9D6CB; line-height: 1; }
 .wb-stars span.on { color: #EABE5A; }
 .wb-empty { padding: 40px 20px; color: var(--text-muted); text-align: center; font-style: italic; }
+.wb-toolbar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 8px 0 14px; font-size: 13px; }
+.wb-toolbar .wb-sep { flex: 1; }
+.wb-toolbar .wb-sel-info { color: var(--text-soft); font-size: 12px; padding: 0 4px; }
+.wb-toolbar .wb-sel-info b { color: var(--accent); }
+.wb-toolbar button[disabled] { opacity: 0.45; cursor: not-allowed; }
+.wb-toolbar button[disabled]:hover { background: var(--surface); color: var(--text); border-color: var(--border-strong); }
+.wb-table .cell-sel { width: 36px; text-align: center; padding-left: 14px; padding-right: 6px; }
+.wb-table .cell-sel input { accent-color: var(--accent); cursor: pointer; }
+.wb-table tr.row-selected td { background: var(--accent-soft); }
+.wb-table tr.row-selected td.cell-word { color: var(--accent); }
+#history li { display: flex; align-items: center; gap: 4px; }
+#history li .dj-key { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#history li .hist-del { border: 0; background: none; color: var(--text-muted); cursor: pointer; padding: 0 4px; font-size: 12px; border-radius: 3px; opacity: 0; transition: opacity 0.12s, color 0.12s; }
+#history li:hover .hist-del { opacity: 1; }
+#history li .hist-del:hover { color: var(--danger); background: var(--surface); }
+.pref-row { display: flex; align-items: center; gap: 12px; font-size: 13px; color: var(--text); }
+.pref-row label { color: var(--text-soft); }
+.pref-row input[type=number] { width: 100px; padding: 6px 10px; border: 1px solid var(--border-strong); border-radius: var(--radius); background: var(--surface); color: var(--text); font: inherit; font-size: 13px; outline: none; }
+.pref-row input[type=number]:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
 
 /* ── Buttons ─────────────────────────────────── */
 button { padding: 6px 14px; border: 1px solid var(--border-strong); background: var(--surface); border-radius: var(--radius); cursor: pointer; font-size: 13px; color: var(--text); transition: background 0.12s, border-color 0.12s; font-family: inherit; }

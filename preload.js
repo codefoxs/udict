@@ -119,5 +119,30 @@ window.udict = {
         else window.utools.dbStorage.setItem(PREF_PREFIX + key, val);
       }
     } catch (e) { console.error('[udict] setPref failed:', e); }
+  },
+  saveFile(content, filename) {
+    try {
+      if (!window.utools || !window.utools.showSaveDialog) return false;
+      const fp = window.utools.showSaveDialog({
+        title: 'Save CSV',
+        defaultPath: filename || 'export.csv',
+        filters: [{ name: 'CSV', extensions: ['csv'] }]
+      });
+      if (!fp) return false;
+      fs.writeFileSync(fp, content, 'utf8');
+      return fp;
+    } catch (e) { console.error('[udict] saveFile failed:', e); return false; }
+  },
+  readFile() {
+    try {
+      if (!window.utools || !window.utools.showOpenDialog) return null;
+      const r = window.utools.showOpenDialog({
+        title: 'Open CSV',
+        filters: [{ name: 'CSV', extensions: ['csv'] }],
+        properties: ['openFile']
+      });
+      if (!Array.isArray(r) || !r.length) return null;
+      return fs.readFileSync(r[0], 'utf8');
+    } catch (e) { console.error('[udict] readFile failed:', e); return null; }
   }
 };

@@ -83,21 +83,44 @@
   let history = getPref('history', null);
   if (!Array.isArray(history)) history = [];
 
+  function getHistoryMax() {
+    const n = parseInt(getPref('historyMax', 50), 10);
+    return Number.isFinite(n) && n >= 1 ? Math.min(n, 1000) : 50;
+  }
   function renderHistory() {
-    if (!history.length) { historyEl.innerHTML = '<li class="muted">（暂无）</li>'; return; }
-    historyEl.innerHTML = history.slice(0, 30).map(w =>
-      `<li data-word="${escapeHtml(w)}"><span class="dj-key">${escapeHtml(w)}</span></li>`
+    const max = getHistoryMax();
+    const display = history.slice(0, max);
+    if (!display.length) { historyEl.innerHTML = '<li class="muted">（暂无）</li>'; return; }
+    historyEl.innerHTML = display.map(w =>
+      `<li data-word="${escapeHtml(w)}"><span class="dj-key">${escapeHtml(w)}</span><button class="hist-del" title="删除此记录">✕</button></li>`
     ).join('');
     historyEl.querySelectorAll('li').forEach(li => {
-      li.addEventListener('click', () => { qInput.value = li.dataset.word; doLookup(li.dataset.word); });
+      li.addEventListener('click', e => {
+        if (e.target.closest('.hist-del')) return;
+        qInput.value = li.dataset.word; doLookup(li.dataset.word);
+      });
+      const del = li.querySelector('.hist-del');
+      if (del) del.addEventListener('click', e => {
+        e.stopPropagation();
+        const w = li.dataset.word;
+        history = history.filter(x => x !== w);
+        setPref('history', history);
+        renderHistory();
+      });
     });
   }
   function pushHistory(w) {
     w = w.trim(); if (!w) return;
-    history = [w, ...history.filter(x => x !== w)].slice(0, 50);
+    const max = getHistoryMax();
+    history = [w, ...history.filter(x => x !== w)].slice(0, max);
     setPref('history', history);
     renderHistory();
   }
+  window.addEventListener('udict-prefs-changed', () => {
+    const max = getHistoryMax();
+    if (history.length > max) { history = history.slice(0, max); setPref('history', history); }
+    renderHistory();
+  });
   document.getElementById('hist-clear').addEventListener('click', e => {
     e.stopPropagation();
     history = []; setPref('history', null); renderHistory();
@@ -595,14 +618,83 @@ document.addEventListener('keydown', function(e){
     if (bookId) openWordbookPage(bookId);
   });
 
+  // ── CSV helpers ──────────────────────────────
+  function csvEscape(s) {
+    s = s == null ? '' : String(s);
+    if (/[",\r\n]/.test(s)) return '"' + s.replace(/"/g, '""') + '"';
+    return s;
+  }
+  function toCsv(rows) {
+    return '﻿' + rows.map(r => r.map(csvEscape).join(',')).join('\r\n') + '\r\n';
+  }
+  function parseCsv(text) {
+    if (!text) return [];
+    if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
+    const rows = []; let cur = [], field = '', inQ = false;
+    for (let i = 0; i < text.length; i++) {
+      const c = text[i];
+      if (inQ) {
+        if (c === '"') {
+          if (text[i + 1] === '"') { field += '"'; i++; }
+          else inQ = false;
+        } else field += c;
+      } else {
+        if (c === '"') inQ = true;
+        else if (c === ',') { cur.push(field); field = ''; }
+        else if (c === '\r') { /* skip */ }
+        else if (c === '\n') { cur.push(field); rows.push(cur); cur = []; field = ''; }
+        else field += c;
+      }
+    }
+    if (field.length || cur.length) { cur.push(field); rows.push(cur); }
+    return rows;
+  }
+
+  // ── Transfer modal ───────────────────────────
+  const transferModal = document.getElementById('transfer-modal');
+  const transferInfo = document.getElementById('transfer-info');
+  const transferBooks = document.getElementById('transfer-books');
+  let transferCtx = { words: [], fromBookId: '', resolve: null };
+  function openTransferModal(wordList, fromBookId) {
+    return new Promise(resolve => {
+      transferCtx = { words: wordList, fromBookId, resolve };
+      transferInfo.innerHTML = `将 <b>${wordList.length}</b> 个生词转移到：`;
+      const candidates = wordbooks.filter(b => b.id !== fromBookId && b.id !== DEFAULT_BOOK_ID);
+      if (!candidates.length) {
+        transferBooks.innerHTML = '<li class="muted" style="font-style:italic;color:var(--text-muted);padding:8px 10px">没有可转移到的生词本（先新建一个）</li>';
+      } else {
+        transferBooks.innerHTML = candidates.map((b, i) =>
+          `<li><label><input type="radio" name="xfer-book" value="${escapeHtml(b.id)}" ${i === 0 ? 'checked' : ''}/> ${escapeHtml(b.name)}</label></li>`
+        ).join('');
+      }
+      transferModal.hidden = false;
+    });
+  }
+  function closeTransferModal(picked) {
+    transferModal.hidden = true;
+    const r = transferCtx.resolve;
+    transferCtx = { words: [], fromBookId: '', resolve: null };
+    if (r) r(picked || null);
+  }
+  document.getElementById('transfer-close').addEventListener('click', () => closeTransferModal(null));
+  document.getElementById('transfer-cancel').addEventListener('click', () => closeTransferModal(null));
+  transferModal.addEventListener('click', e => { if (e.target === transferModal) closeTransferModal(null); });
+  document.getElementById('transfer-confirm').addEventListener('click', () => {
+    const sel = transferBooks.querySelector('input[name=xfer-book]:checked');
+    closeTransferModal(sel ? sel.value : null);
+  });
+
   // ── Wordbook page ────────────────────────────
   let wbSort = { field: 'time', dir: 'desc' };
+  let wbSelected = new Set();
+  let wbCurrentBookId = null;
   function openWordbookPage(bookId) {
     const book = wordbooks.find(b => b.id === bookId);
     if (!book) return;
     currentIframe = null;
     dictJump.innerHTML = '<li class="muted">（生词本视图）</li>';
     const isDefault = bookId === DEFAULT_BOOK_ID;
+    if (wbCurrentBookId !== bookId) { wbSelected = new Set(); wbCurrentBookId = bookId; }
     const entries = wordsInBook(bookId).slice();
     const cmp = (a, b) => {
       const [wa, ma] = a, [wb, mb] = b;
@@ -625,7 +717,9 @@ document.addEventListener('keydown', function(e){
       const srcCell = isDefault
         ? `<td class="cell-src">${escapeHtml((m.books || []).map(bookNameById).join('；'))}</td>`
         : '';
-      return `<tr data-word="${escapeHtml(w)}">
+      const checked = wbSelected.has(w) ? 'checked' : '';
+      return `<tr data-word="${escapeHtml(w)}" class="${checked ? 'row-selected' : ''}">
+        <td class="cell-sel"><input type="checkbox" class="wb-sel" ${checked}/></td>
         <td class="cell-word">${escapeHtml(w)}</td>
         <td class="cell-time">${escapeHtml(time)}</td>
         <td class="cell-diff"><select class="diff-sel">${opts}</select></td>
@@ -635,24 +729,60 @@ document.addEventListener('keydown', function(e){
       </tr>`;
     }).join('');
     const arrow = f => wbSort.field === f ? (wbSort.dir === 'asc' ? ' ▲' : ' ▼') : '';
+    const allChecked = entries.length && entries.every(([w]) => wbSelected.has(w));
     const headers = `
+      <th class="cell-sel"><input type="checkbox" id="wb-sel-all" ${allChecked ? 'checked' : ''} title="全选"/></th>
       <th class="sortable" data-sort="word">生词${arrow('word')}</th>
       <th class="sortable" data-sort="time">收录时间${arrow('time')}</th>
       <th class="sortable" data-sort="diff">难度${arrow('diff')}</th>
       <th>备注</th>
       ${isDefault ? '<th>来源</th>' : ''}
       <th></th>`;
+    const selCount = wbSelected.size;
     results.innerHTML = `
       <div class="wb-page">
         <div class="wb-page-head">
           <h2>${escapeHtml(book.name)}</h2>
           <span class="count">${entries.length} 词</span>
         </div>
+        <div class="wb-toolbar">
+          <button id="wb-import" title="从 CSV 导入到本生词本">导入 CSV</button>
+          <button id="wb-export" title="导出本生词本为 CSV">导出 CSV</button>
+          <span class="wb-sep"></span>
+          <span class="wb-sel-info">已选 <b>${selCount}</b></span>
+          <button id="wb-bulk-del" class="danger" ${selCount ? '' : 'disabled'}>批量删除</button>
+          <button id="wb-bulk-xfer" ${selCount ? '' : 'disabled'}>批量转移</button>
+          <button id="wb-bulk-export" ${selCount ? '' : 'disabled'}>导出选中</button>
+        </div>
         ${entries.length ? `<table class="wb-table">
           <thead><tr>${headers}</tr></thead>
           <tbody>${rows}</tbody>
         </table>` : '<div class="wb-empty">暂无生词 — 在查词页面点击右侧 ☆ 收录</div>'}
       </div>`;
+
+    // Toolbar handlers
+    document.getElementById('wb-import').addEventListener('click', () => importCsvToBook(bookId));
+    document.getElementById('wb-export').addEventListener('click', () => exportBookCsv(bookId, null));
+    const bulkDel = document.getElementById('wb-bulk-del');
+    const bulkXfer = document.getElementById('wb-bulk-xfer');
+    const bulkExp = document.getElementById('wb-bulk-export');
+    if (bulkDel) bulkDel.addEventListener('click', () => bulkDelete(bookId));
+    if (bulkXfer) bulkXfer.addEventListener('click', () => bulkTransfer(bookId));
+    if (bulkExp) bulkExp.addEventListener('click', () => exportBookCsv(bookId, Array.from(wbSelected)));
+
+    const selAll = document.getElementById('wb-sel-all');
+    if (selAll) selAll.addEventListener('change', () => {
+      if (selAll.checked) entries.forEach(([w]) => wbSelected.add(w));
+      else wbSelected.clear();
+      openWordbookPage(bookId);
+    });
+    results.querySelectorAll('.wb-sel').forEach(cb => {
+      cb.addEventListener('change', () => {
+        const w = cb.closest('tr').dataset.word;
+        if (cb.checked) wbSelected.add(w); else wbSelected.delete(w);
+        openWordbookPage(bookId);
+      });
+    });
     results.querySelectorAll('.wb-table th.sortable').forEach(th => {
       th.addEventListener('click', () => {
         const f = th.dataset.sort;
@@ -698,6 +828,138 @@ document.addEventListener('keydown', function(e){
         openWordbookPage(bookId);
       });
     });
+  }
+
+  // ── Bulk + CSV operations ────────────────────
+  function bulkDelete(bookId) {
+    if (!wbSelected.size) return;
+    const list = Array.from(wbSelected);
+    const isDefault = bookId === DEFAULT_BOOK_ID;
+    const msg = isDefault
+      ? `从所有生词本移除选中的 ${list.length} 个生词？`
+      : `从当前生词本移除选中的 ${list.length} 个生词？`;
+    if (!confirm(msg)) return;
+    for (const w of list) {
+      if (!words[w]) continue;
+      if (isDefault) {
+        delete words[w];
+      } else {
+        words[w].books = (words[w].books || []).filter(x => x !== bookId);
+        if (!words[w].books.length) delete words[w];
+      }
+    }
+    wbSelected.clear();
+    saveWords(); renderWordbooks(); updateStarBtn();
+    openWordbookPage(bookId);
+  }
+
+  async function bulkTransfer(bookId) {
+    if (!wbSelected.size) return;
+    const list = Array.from(wbSelected);
+    const targetId = await openTransferModal(list, bookId);
+    if (!targetId) return;
+    for (const w of list) {
+      if (!words[w]) continue;
+      let books = words[w].books || [];
+      if (bookId === DEFAULT_BOOK_ID) {
+        books = [targetId];
+      } else {
+        books = books.filter(x => x !== bookId);
+        if (!books.includes(targetId)) books.push(targetId);
+      }
+      words[w].books = books;
+    }
+    wbSelected.clear();
+    saveWords(); renderWordbooks(); updateStarBtn();
+    openWordbookPage(bookId);
+  }
+
+  function exportBookCsv(bookId, onlyWords) {
+    const book = wordbooks.find(b => b.id === bookId);
+    if (!book) return;
+    const isDefault = bookId === DEFAULT_BOOK_ID;
+    let entries = wordsInBook(bookId);
+    if (Array.isArray(onlyWords) && onlyWords.length) {
+      const sel = new Set(onlyWords);
+      entries = entries.filter(([w]) => sel.has(w));
+    }
+    if (!entries.length) { alert('没有可导出的生词'); return; }
+    const bookNameById = id => (wordbooks.find(b => b.id === id) || {}).name || id;
+    const header = isDefault
+      ? ['word', 'addedAt', 'difficulty', 'note', 'books']
+      : ['word', 'addedAt', 'difficulty', 'note'];
+    const rows = [header];
+    for (const [w, m] of entries) {
+      const row = [
+        w,
+        m.addedAt ? new Date(m.addedAt).toISOString() : '',
+        String(m.difficulty || 1),
+        m.note || ''
+      ];
+      if (isDefault) row.push((m.books || []).map(bookNameById).join(';'));
+      rows.push(row);
+    }
+    const ts = new Date().toISOString().slice(0, 10);
+    const fname = `udict-${book.name.replace(/[\\/:*?"<>|]/g, '_')}-${ts}.csv`;
+    const text = toCsv(rows);
+    if (window.udict && window.udict.saveFile) {
+      const fp = window.udict.saveFile(text, fname);
+      if (fp) alert('已导出：' + fp);
+    } else {
+      const blob = new Blob([text], { type: 'text/csv;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href = url; a.download = fname; a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+  }
+
+  function importCsvToBook(bookId) {
+    if (!window.udict || !window.udict.readFile) { alert('当前环境不支持文件导入'); return; }
+    const text = window.udict.readFile();
+    if (text == null) return;
+    const rows = parseCsv(text).filter(r => r.length && r.some(c => c !== ''));
+    if (!rows.length) { alert('CSV 文件为空'); return; }
+    // Detect header
+    const first = rows[0].map(c => c.trim().toLowerCase());
+    let header = null, dataRows = rows;
+    if (first.includes('word') || first[0] === 'word') {
+      header = first; dataRows = rows.slice(1);
+    }
+    const col = name => header ? header.indexOf(name) : -1;
+    const wIdx = header ? Math.max(0, col('word')) : 0;
+    const tIdx = col('addedat');
+    const dIdx = col('difficulty');
+    const nIdx = col('note');
+    let added = 0, updated = 0;
+    for (const r of dataRows) {
+      const w = (r[wIdx] || '').trim();
+      if (!w) continue;
+      const addedAt = (() => {
+        if (tIdx < 0) return null;
+        const v = r[tIdx]; if (!v) return null;
+        const t = Date.parse(v); return Number.isFinite(t) ? t : null;
+      })();
+      const difficulty = (() => {
+        if (dIdx < 0) return null;
+        const n = parseInt(r[dIdx], 10);
+        return Number.isFinite(n) && n >= 1 && n <= 5 ? n : null;
+      })();
+      const note = nIdx >= 0 ? (r[nIdx] || '') : '';
+      const exists = !!words[w];
+      const prev = words[w] || {};
+      const books = new Set(prev.books || []);
+      books.add(bookId);
+      words[w] = {
+        addedAt: prev.addedAt || addedAt || Date.now(),
+        difficulty: difficulty || prev.difficulty || 1,
+        note: note || prev.note || '',
+        books: Array.from(books)
+      };
+      if (exists) updated++; else added++;
+    }
+    saveWords(); renderWordbooks(); updateStarBtn();
+    openWordbookPage(bookId);
+    alert(`导入完成：新增 ${added}，更新 ${updated}`);
   }
 
   if (window.udict && window.udict.onEnter) {

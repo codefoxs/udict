@@ -135,7 +135,23 @@
     loadCache();
   });
 
-  window.addEventListener('udict-settings-open', () => { loadConfig(); loadCache(); });
+  const histMaxInput = document.getElementById('pref-hist-max');
+  function loadPrefs() {
+    const v = (window.udict && window.udict.getPref) ? window.udict.getPref('historyMax', 50) : 50;
+    histMaxInput.value = Number(v) || 50;
+  }
+  if (histMaxInput) {
+    histMaxInput.addEventListener('change', () => {
+      let n = parseInt(histMaxInput.value, 10);
+      if (!Number.isFinite(n) || n < 1) n = 50;
+      if (n > 1000) n = 1000;
+      histMaxInput.value = n;
+      if (window.udict && window.udict.setPref) window.udict.setPref('historyMax', String(n));
+      window.dispatchEvent(new CustomEvent('udict-prefs-changed'));
+    });
+  }
+
+  window.addEventListener('udict-settings-open', () => { loadConfig(); loadCache(); loadPrefs(); });
   if (document.getElementById('settings-view') && !document.getElementById('settings-view').hidden) {
     loadConfig(); loadCache();
   }
